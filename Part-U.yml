@@ -2663,7 +2663,7 @@ Screens:
                                           Text: =ThisItem.HolTitle
                                           Width: =ThisItem.PosW - 6
                                           X: =ThisItem.PosX + 3
-                                          Y: =ThisItem.PosY + 1 - (ThisItem.RowNum - 1) + 1.5
+                                          Y: =1
                               - galWeekSlots_UserCal:
                                   Control: Gallery@2.15.0
                                   Variant: Vertical
@@ -2842,7 +2842,7 @@ Screens:
                                           VerticalAlign: =VerticalAlign.Top
                                           Width: =ThisItem.PosW - 6
                                           X: =ThisItem.PosX + 3
-                                          Y: =ThisItem.PosY + 1 - (ThisItem.RowNum - 1) + 1.5
+                                          Y: =1
             - conCatRadioWeek_U:
                 Control: GroupContainer@1.5.0
                 Variant: ManualLayout
@@ -3970,6 +3970,9 @@ Screens:
             - btnBuildSubChoices_LstU:
                 Control: Classic/Button@2.2.0
                 Properties:
+                  BorderColor: =
+                  BorderStyle: =BorderStyle.None
+                  BorderThickness: =0
                   Height: =1
                   OnSelect: |-
                     =// 選択中の大分類に属する中分類を並べ直す（先頭は「すべて」）
