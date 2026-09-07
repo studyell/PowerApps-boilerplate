@@ -8306,6 +8306,7 @@ Screens:
             Set(varCloseDaysPre, varPreDraft.CloseDays);
             Set(varEditDaysPre, varPreDraft.EditDays);
             Set(varFramePatternPre, varPreDraft.PatternName);
+            Set(varFrameMailTmplPre, varPreDraft.MailTemplate);
             Set(varFrameActivePre, varPreDraft.IsActive);
             Set(varFrameColorRPre, varPreDraft.ColorR);
             Set(varFrameColorGPre, varPreDraft.ColorG);
@@ -8629,6 +8630,7 @@ Screens:
                             CloseDays: txtCloseDays_Pre.Text,
                             EditDays: txtEditDays_Pre.Text,
                             PatternName: ddFramePattern_Pre.Selected.パターン名,
+                            MailTemplate: ddMailTemplate_Pre.Selected.Value,
                             IsActive: chkFrameActive_Pre.Value,
                             ColorR: varFrameColorRPre,
                             ColorG: varFrameColorGPre,
@@ -8703,6 +8705,7 @@ Screens:
                     ClearCollect(colWdSelectedPre, {WdName: ""});
                     Clear(colWdSelectedPre);
                     Set(varFramePatternPre, "");
+                    Set(varFrameMailTmplPre, "");
                     Set(varFrameActivePre, true);
                     Set(varFrameCategoryPre, Blank());
                     Set(varFrameSubCategoryPre, Blank());
@@ -8773,6 +8776,7 @@ Screens:
                         )
                     );
                     Set(varFramePatternPre, ThisItem.PatternName);
+                    Set(varFrameMailTmplPre, ThisItem.メールテンプレート名);
                     Set(varFrameActivePre, ThisItem.IsActive);
                     Set(varFrameColorRPre, Coalesce(ThisItem.ColorR, 126));
                     Set(varFrameColorGPre, Coalesce(ThisItem.ColorG, 199));
@@ -9552,6 +9556,28 @@ Screens:
                               Width: =40
                               X: =506
                               Y: =429
+                        - lblMailTmplGuide_Pre:
+                            Control: Label@2.5.1
+                            Properties:
+                              Size: =12
+                              Text: ="メールテンプレート"
+                              Width: =167
+                              X: =13
+                              Y: =480
+                        - ddMailTemplate_Pre:
+                            Control: Classic/DropDown@2.3.1
+                            Properties:
+                              AllowEmptySelection: =true
+                              BorderThickness: =1
+                              Default: =varFrameMailTmplPre
+                              FocusedBorderThickness: =2
+                              Items: =Distinct(Filter(メールテンプレート管理, '共通／個別'.Value = "個別"), テンプレート名).Value
+                              Items.Value: =Value
+                              OnChange: =Set(varFrameMailTmplPre, Self.Selected.Value)
+                              Size: =12
+                              Width: =270
+                              X: =180
+                              Y: =480
                         - lblColorGuide_Pre:
                             Control: Label@2.5.1
                             Properties:
@@ -9559,7 +9585,7 @@ Screens:
                               Text: ="表示色"
                               Width: =167
                               X: =13
-                              Y: =480
+                              Y: =532
                         - recFrameColor_Pre:
                             Control: Rectangle@2.3.0
                             Properties:
@@ -9575,7 +9601,7 @@ Screens:
                               Height: =40
                               Width: =64
                               X: =180
-                              Y: =480
+                              Y: =532
                         - btnPickColor_Pre:
                             Control: Classic/Button@2.2.0
                             Properties:
@@ -9584,7 +9610,7 @@ Screens:
                               Text: ="色を選択"
                               Width: =140
                               X: =256
-                              Y: =480
+                              Y: =532
                         - lblPublishGuide_Pre:
                             Control: Label@2.5.1
                             Properties:
@@ -9592,7 +9618,7 @@ Screens:
                               Text: ="公開日"
                               Width: =167
                               X: =13
-                              Y: =532
+                              Y: =584
                         - dpPublishDate_Pre:
                             Control: Classic/DatePicker@2.6.0
                             Properties:
@@ -9604,7 +9630,7 @@ Screens:
                               Size: =13
                               Width: =180
                               X: =180
-                              Y: =532
+                              Y: =584
                         - ddPublishHour_Pre:
                             Control: Classic/DropDown@2.3.1
                             Properties:
@@ -9616,7 +9642,7 @@ Screens:
                               OnChange: =Set(varPublishHourPre, Self.Selected.HourVal)
                               Width: =72
                               X: =368
-                              Y: =532
+                              Y: =584
                         - lblPublishColon_Pre:
                             Control: Label@2.5.1
                             Properties:
@@ -9624,7 +9650,7 @@ Screens:
                               Text: =":"
                               Width: =20
                               X: =440
-                              Y: =532
+                              Y: =584
                         - ddPublishMinute_Pre:
                             Control: Classic/DropDown@2.3.1
                             Properties:
@@ -9636,7 +9662,7 @@ Screens:
                               OnChange: =Set(varPublishMinutePre, Self.Selected.MinVal)
                               Width: =72
                               X: =462
-                              Y: =532
+                              Y: =584
                         - lblPublishNote_Pre:
                             Control: Label@2.5.1
                             Properties:
@@ -9645,7 +9671,7 @@ Screens:
                               Text: ="以降に公開"
                               Width: =117
                               X: =542
-                              Y: =532
+                              Y: =584
                         - lblCloseGuide_Pre:
                             Control: Label@2.5.1
                             Properties:
@@ -9653,7 +9679,7 @@ Screens:
                               Text: ="受付期限"
                               Width: =167
                               X: =13
-                              Y: =584
+                              Y: =636
                         - txtCloseDays_Pre:
                             Control: Classic/TextInput@2.3.2
                             Properties:
@@ -9663,7 +9689,7 @@ Screens:
                               HintText: ="0"
                               Width: =90
                               X: =180
-                              Y: =584
+                              Y: =636
                         - lblCloseUnit_Pre:
                             Control: Label@2.5.1
                             Properties:
@@ -9672,7 +9698,7 @@ Screens:
                               Text: ="日前まで新規予約を受け付ける"
                               Width: =380
                               X: =278
-                              Y: =584
+                              Y: =636
                         - lblEditLimitGuide_Pre:
                             Control: Label@2.5.1
                             Properties:
@@ -9680,7 +9706,7 @@ Screens:
                               Text: ="更新期限"
                               Width: =167
                               X: =13
-                              Y: =636
+                              Y: =688
                         - txtEditDays_Pre:
                             Control: Classic/TextInput@2.3.2
                             Properties:
@@ -9690,7 +9716,7 @@ Screens:
                               HintText: ="0"
                               Width: =90
                               X: =180
-                              Y: =636
+                              Y: =688
                         - lblEditUnit_Pre:
                             Control: Label@2.5.1
                             Properties:
@@ -9699,7 +9725,7 @@ Screens:
                               Text: ="日前まで予約者が変更・取り消しできる"
                               Width: =380
                               X: =278
-                              Y: =636
+                              Y: =688
                         - chkFrameActive_Pre:
                             Control: Classic/CheckBox@2.1.0
                             Properties:
@@ -9709,7 +9735,7 @@ Screens:
                               Text: ="有効（オフにするとカレンダー非表示）"
                               Width: =350
                               X: =180
-                              Y: =688
+                              Y: =740
                         - lblSlotPreviewTitle_Pre:
                             Control: Label@2.5.1
                             Properties:
@@ -9719,7 +9745,7 @@ Screens:
                               Text: ="生成される時間枠（プレビュー）"
                               Width: =500
                               X: =22
-                              Y: =741
+                              Y: =793
                         - lblSlotPreview_Pre:
                             Control: Label@2.5.1
                             Properties:
@@ -9779,7 +9805,7 @@ Screens:
                               VerticalAlign: =VerticalAlign.Top
                               Width: =584
                               X: =18
-                              Y: =779
+                              Y: =831
             - conExceptForm:
                 Control: GroupContainer@1.5.0
                 Variant: ManualLayout
@@ -9997,6 +10023,7 @@ Screens:
                                         ExceptDays: exd,
                                         ConfigJson: cfg,
                                         PatternName: ddFramePattern_Pre.Selected.パターン名,
+                                        メールテンプレート名: ddMailTemplate_Pre.Selected.Value,
                                         IsActive: chkFrameActive_Pre.Value,
                                         ColorR: varFrameColorRPre,
                                         ColorG: varFrameColorGPre,
@@ -10034,6 +10061,7 @@ Screens:
                                         ExceptDays: exd,
                                         ConfigJson: cfg,
                                         PatternName: ddFramePattern_Pre.Selected.パターン名,
+                                        メールテンプレート名: ddMailTemplate_Pre.Selected.Value,
                                         IsActive: chkFrameActive_Pre.Value,
                                         ColorR: varFrameColorRPre,
                                         ColorG: varFrameColorGPre,
@@ -10597,8 +10625,8 @@ Screens:
                                 =SortByColumns(
                                     Filter(
                                         colReservations,
-                                        // 「すべて」にキャンセルは含めない
-                                        If(varResFilter = "すべて", Status <> "キャンセル", Status = varResFilter),
+                                        // 「すべて」に取り消しは含めない
+                                        If(varResFilter = "すべて", Status <> "取り消し", Status = varResFilter),
                                         IsBlank(varResSlotFilter) ||
                                             ID in Filter(colFilterDetails, SlotId = varResSlotFilter).ResId
                                     ),
@@ -10874,10 +10902,10 @@ Screens:
                   Height: =36
                   Items: |-
                     =If(
-                        // 枠で絞り込んでいる間はキャンセルを選べないようにする
-                        // （キャンセル時に予約明細を消すため、枠からは辿れない）
+                        // 枠で絞り込んでいる間は取り消しを選べないようにする
+                        // （取り消し時に予約明細を消すため、枠からは辿れない）
                         IsBlank(varResSlotFilter),
-                        ["すべて", "承認待ち", "予約確定", "差し戻し", "キャンセル"],
+                        ["すべて", "承認待ち", "予約確定", "差し戻し", "取り消し"],
                         ["すべて", "承認待ち", "予約確定", "差し戻し"]
                     )
                   Items.Value: =Value
@@ -11019,7 +11047,7 @@ Screens:
                   Height: =35
                   Text: |-
                     =If(varResRangeMode = "future", "今日以降", Text(varResMonth, "yyyy年m月")) &
-                    " の予約：" & CountRows(Filter(colReservations, Status <> "キャンセル")) & " 件" &
+                    " の予約：" & CountRows(Filter(colReservations, Status <> "取り消し")) & " 件" &
                     "　（承認待ち " & CountRows(Filter(colReservations, Status = "承認待ち")) & " / " &
                     "予約確定 " & CountRows(Filter(colReservations, Status = "予約確定")) & " / " &
                     "差し戻し " & CountRows(Filter(colReservations, Status = "差し戻し")) & "）" &
@@ -11334,7 +11362,7 @@ Screens:
                               !varIsAdmin && varSelEditExpired,
                               Notify(
                                   "更新期限（" & Text(varSelEditLimit, "yyyy/mm/dd") &
-                                      " まで）を過ぎているためキャンセルできません",
+                                      " まで）を過ぎているため取り消しできません",
                                   NotificationType.Warning
                               ),
                               // 押さえていた枠をすべて解放し、日枠の満枠スロット数を数え直す
@@ -11359,7 +11387,7 @@ Screens:
                           Patch(
                               予約リスト,
                               LookUp(予約リスト, ID = varSelRes.ID),
-                              {Status: "キャンセル"}
+                              {Status: "取り消し"}
                           );
                           If(
                               !IsBlank(varRelDayId),
@@ -11372,10 +11400,10 @@ Screens:
                           );
                           Select(btnAdminReload);
                               Set(varShowResPopup, false);
-                              Notify("予約をキャンセルしました（枠を解放しました）", NotificationType.Success)
+                              Notify("予約を取り消ししました（枠を解放しました）", NotificationType.Success)
                           )
                         Size: =12
-                        Text: ="キャンセル"
+                        Text: ="取り消し"
                         Visible: |-
                           =(varIsAdmin && (varSelRes.Status = "予約確定" || varSelRes.Status = "差し戻し"))
                               || (varIsOwner && varSelRes.Status = "差し戻し")
@@ -11712,7 +11740,7 @@ Screens:
                     // 担当課長は App.OnStart で作った colManager（ユーザー名簿）から選ぶ
                     // 予約リストには列を持たず、回答JSONにのみ保存する
                     ItemKey: "fix_manager", Label: "担当課長", Kind: "select",
-                    Choices: JSON(ForAll(colManager As M, Text(M.氏名)), JSONFormat.Compact),
+                    Choices: "[" & Concat(colManager, Char(34) & 氏名 & Char(34), ",") & "]",
                     Req: true, Hint: "", Value: "",
                     Remarks: "", Block: 1, SortNo: 23, Source: "fixed", FieldKey: ""
                 },
@@ -12704,7 +12732,13 @@ Screens:
                             FirstN(
                                 Sort(
                                     Sort(
-                                        Filter(予約リスト, 氏名 = User().FullName, Status <> "キャンセル"),
+                                        Filter(
+                                            予約リスト,
+                                            氏名 = gblUserInfo.氏名,
+                                            Status = "承認待ち",
+                                            Status = "予約確定",
+                                            Status = "差し戻し"
+                                        ),
                                         StartTime,
                                         SortOrder.Descending
                                     ),

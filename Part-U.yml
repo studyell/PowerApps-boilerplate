@@ -5358,8 +5358,8 @@ Screens:
                                 =SortByColumns(
                                     Filter(
                                         colReservations,
-                                        // 「すべて」にキャンセルは含めない
-                                        If(varResFilter = "すべて", Status <> "キャンセル", Status = varResFilter)
+                                        // 「すべて」に取り消しは含めない
+                                        If(varResFilter = "すべて", Status <> "取り消し", Status = varResFilter)
                                     ),
                                     "StartTime"
                                 )
@@ -5622,7 +5622,7 @@ Screens:
                   BorderThickness: =1
                   Default: ="すべて"
                   Height: =36
-                  Items: =["すべて", "承認待ち", "予約確定", "差し戻し", "キャンセル"]
+                  Items: =["すべて", "承認待ち", "予約確定", "差し戻し", "取り消し"]
                   Items.Value: =Value
                   OnChange: =Set(varResFilter, Self.Selected.Value)
                   Width: =160
@@ -5743,7 +5743,7 @@ Screens:
                   Height: =35
                   Text: |-
                     =If(varResRangeMode = "future", "今日以降", Text(varResMonth, "yyyy年m月")) &
-                    " の予約：" & CountRows(Filter(colReservations, Status <> "キャンセル")) & " 件" &
+                    " の予約：" & CountRows(Filter(colReservations, Status <> "取り消し")) & " 件" &
                     "　（承認待ち " & CountRows(Filter(colReservations, Status = "承認待ち")) & " / " &
                     "予約確定 " & CountRows(Filter(colReservations, Status = "予約確定")) & " / " &
                     "差し戻し " & CountRows(Filter(colReservations, Status = "差し戻し")) & "）" &
@@ -6016,7 +6016,7 @@ Screens:
                               !varIsAdmin && varSelEditExpired,
                               Notify(
                                   "更新期限（" & Text(varSelEditLimit, "yyyy/mm/dd") &
-                                      " まで）を過ぎているためキャンセルできません",
+                                      " まで）を過ぎているため取り消しできません",
                                   NotificationType.Warning
                               ),
                               // 押さえていた枠をすべて解放し、日枠の満枠スロット数を数え直す
@@ -6041,7 +6041,7 @@ Screens:
                           Patch(
                               予約リスト,
                               LookUp(予約リスト, ID = varSelRes.ID),
-                              {Status: "キャンセル"}
+                              {Status: "取り消し"}
                           );
                           If(
                               !IsBlank(varRelDayId),
@@ -6054,10 +6054,10 @@ Screens:
                           );
                           Select(btnAdminReload_UserRes);
                               Set(varShowResPopup, false);
-                              Notify("予約をキャンセルしました（枠を解放しました）", NotificationType.Success)
+                              Notify("予約を取り消ししました（枠を解放しました）", NotificationType.Success)
                           )
                         Size: =12
-                        Text: ="キャンセル"
+                        Text: ="取り消し"
                         Visible: |-
                           =(varIsAdmin && (varSelRes.Status = "予約確定" || varSelRes.Status = "差し戻し"))
                               || (varIsOwner && varSelRes.Status = "差し戻し")
@@ -6357,7 +6357,7 @@ Screens:
                     // 担当課長は App.OnStart で作った colManager（ユーザー名簿）から選ぶ
                     // 予約リストには列を持たず、回答JSONにのみ保存する
                     ItemKey: "fix_manager", Label: "担当課長", Kind: "select",
-                    Choices: JSON(ForAll(colManager As M, Text(M.氏名)), JSONFormat.Compact),
+                    Choices: "[" & Concat(colManager, Char(34) & 氏名 & Char(34), ",") & "]",
                     Req: true, Hint: "", Value: "",
                     Remarks: "", Block: 1, SortNo: 23, Source: "fixed", FieldKey: ""
                 },
@@ -7305,7 +7305,13 @@ Screens:
                             FirstN(
                                 Sort(
                                     Sort(
-                                        Filter(予約リスト, 氏名 = User().FullName, Status <> "キャンセル"),
+                                        Filter(
+                                            予約リスト,
+                                            氏名 = gblUserInfo.氏名,
+                                            Status = "承認待ち",
+                                            Status = "予約確定",
+                                            Status = "差し戻し"
+                                        ),
                                         StartTime,
                                         SortOrder.Descending
                                     ),
