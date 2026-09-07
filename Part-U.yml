@@ -286,7 +286,7 @@ Screens:
         // 週の最低の縦幅（枠がない週はこの高さになる）
         Set(varWeekMinHeight, 90);
         // 週ギャラリーを収める領域の高さ（conWeeks の Height と揃える）
-        Set(varWeeksAreaHeight, 604);
+        Set(varWeeksAreaHeight, 585);
         Set(varShowPopup, false);
         // ---- 週間表示のレイアウト設定（ここを変えれば表示が変わる）----
         Set(gWeekDays, 4);           // 1画面に表示する日数
@@ -338,6 +338,197 @@ Screens:
             Height: =Parent.Height
             Width: =1
             X: =219
+      - galSideMenu__UserCal:
+          Control: Gallery@2.15.0
+          Variant: Vertical
+          Properties:
+            Height: =Parent.Height - 100
+            Items: |-
+              =SortByColumns(
+                  Table(
+                      {MenuId: 12, ParentId: 0, Level: 1, SortNo: 50, Icon: "📢", Label: "お知らせ", ScreenKey: "scnNotice"},
+                      {MenuId: 1, ParentId: 0, Level: 1, SortNo: 100, Icon: "🎪", Label: "イベント参照", ScreenKey: ""},
+                      {MenuId: 11, ParentId: 1, Level: 2, SortNo: 115, Icon: "📅", Label: "カレンダー", ScreenKey: "scnCalendarUser"},
+                      {MenuId: 3, ParentId: 1, Level: 2, SortNo: 120, Icon: "☰", Label: "一覧", ScreenKey: "list"},
+                      {MenuId: 9, ParentId: 0, Level: 1, SortNo: 400, Icon: "📋", Label: "予約一覧", ScreenKey: "scnMyReservations"}
+                  ),
+                  "SortNo"
+              )
+            OnSelect: |-
+              =Switch(
+                  ThisItem.ScreenKey,
+                  "scnNotice", Navigate(scnNoticeUser, ScreenTransition.None),
+                  "scnCalendarUser", Navigate(scnCalendarUser, ScreenTransition.None),
+                  "scnMyReservations", Navigate(scnReservationsUser, ScreenTransition.None),
+                  "list", Navigate(scnCalendarListUser, ScreenTransition.None)
+              )
+            ShowScrollbar: =false
+            TemplatePadding: =0
+            TemplateSize: =44
+            Width: =220
+            Y: =14
+          Children:
+            - recMenuRowBg_UserCal:
+                Control: Rectangle@2.3.0
+                Properties:
+                  Fill: |-
+                    =If(
+                        !IsBlank(ThisItem.ScreenKey) && ThisItem.ScreenKey =
+                    If(
+                        App.ActiveScreen = scnNoticeUser,
+                        "scnNotice",
+                        App.ActiveScreen = scnCalendarUser || App.ActiveScreen = scnReserveEntryUser,
+                        "scnCalendarUser",
+                        App.ActiveScreen = scnReservationsUser,
+                        "scnMyReservations",
+                        ""
+                    ),
+                        RGBA(230, 241, 251, 1),
+                        RGBA(0, 0, 0, 0)
+                    )
+                  Height: =44
+                  OnSelect: =Select(Parent)
+                  Width: =Parent.TemplateWidth
+            - recMenuAccent_UserCal:
+                Control: Rectangle@2.3.0
+                Properties:
+                  Fill: |-
+                    =If(
+                        !IsBlank(ThisItem.ScreenKey) && ThisItem.ScreenKey =
+                    If(
+                        App.ActiveScreen = scnNoticeUser,
+                        "scnNotice",
+                        App.ActiveScreen = scnCalendarUser || App.ActiveScreen = scnReserveEntryUser,
+                        "scnCalendarUser",
+                        App.ActiveScreen = scnReservationsUser,
+                        "scnMyReservations",
+                        ""
+                    ),
+                        RGBA(0, 120, 212, 1),
+                        RGBA(0, 0, 0, 0)
+                    )
+                  Height: =44
+                  Width: =3
+            - lblMenuIcon_UserCal:
+                Control: Label@2.5.1
+                Properties:
+                  Align: =Align.Center
+                  Color: |-
+                    =If(
+                        !IsBlank(ThisItem.ScreenKey) && ThisItem.ScreenKey =
+                    If(
+                        App.ActiveScreen = scnNoticeUser,
+                        "scnNotice",
+                        App.ActiveScreen = scnCalendarUser || App.ActiveScreen = scnReserveEntryUser,
+                        "scnCalendarUser",
+                        App.ActiveScreen = scnReservationsUser,
+                        "scnMyReservations",
+                        ""
+                    ),
+                        RGBA(0, 90, 180, 1),
+                        RGBA(90, 130, 175, 1)
+                    )
+                  Height: =44
+                  OnSelect: =Select(Parent)
+                  Text: =ThisItem.Icon
+                  Width: =26
+                  X: =If(ThisItem.Level = 1, 16, 38)
+            - lblMenuLabel_UserCal:
+                Control: Label@2.5.1
+                Properties:
+                  Color: |-
+                    =If(
+                        !IsBlank(ThisItem.ScreenKey) && ThisItem.ScreenKey =
+                    If(
+                        App.ActiveScreen = scnNoticeUser,
+                        "scnNotice",
+                        App.ActiveScreen = scnCalendarUser || App.ActiveScreen = scnReserveEntryUser,
+                        "scnCalendarUser",
+                        App.ActiveScreen = scnReservationsUser,
+                        "scnMyReservations",
+                        ""
+                    ),
+                        RGBA(0, 90, 180, 1),
+                        ThisItem.Level = 1,
+                        RGBA(90, 130, 175, 1),
+                        RGBA(70, 70, 70, 1)
+                    )
+                  FontWeight: =If(ThisItem.Level = 1, FontWeight.Semibold, FontWeight.Normal)
+                  Height: =44
+                  OnSelect: =Select(Parent)
+                  Text: =ThisItem.Label
+                  Width: =If(ThisItem.Level = 1, 160, 140)
+                  X: =If(ThisItem.Level = 1, 46, 68)
+            - btnMenuRow__UserCal:
+                Control: Classic/Button@2.2.0
+                Properties:
+                  BorderThickness: =0
+                  Color: =RGBA(0, 0, 0, 0)
+                  DisabledFill: =RGBA(0, 0, 0, 0)
+                  DisplayMode: =If(IsBlank(ThisItem.ScreenKey), DisplayMode.Disabled, DisplayMode.Edit)
+                  Fill: =RGBA(0, 0, 0, 0)
+                  FocusedBorderThickness: =0
+                  Height: =44
+                  HoverFill: =RGBA(230, 241, 251, 0.55)
+                  OnSelect: =Select(Parent)
+                  PressedColor: =RGBA(0, 0, 0, 0)
+                  PressedFill: =RGBA(230, 241, 251, 0.8)
+                  RadiusBottomLeft: =0
+                  RadiusBottomRight: =0
+                  RadiusTopLeft: =0
+                  RadiusTopRight: =0
+                  Text: =""
+                  Width: =Parent.TemplateWidth
+      - recSideDivider__UserCal:
+          Control: Rectangle@2.3.0
+          Properties:
+            Fill: =RGBA(224, 228, 233, 1)
+            Height: =1
+            Width: =188
+            X: =16
+            Y: =Parent.Height - 84
+      - lblTouIcon__UserCal:
+          Control: Label@2.5.1
+          Properties:
+            Color: =RGBA(90, 95, 105, 1)
+            Height: =44
+            OnSelect: =Launch(varTouLink)
+            Text: |-
+              ="📄"
+            Width: =26
+            X: =16
+            Y: =Parent.Height - 68
+      - lblTouLabel__UserCal:
+          Control: Label@2.5.1
+          Properties:
+            Color: =RGBA(60, 65, 75, 1)
+            Height: =44
+            OnSelect: =Launch(varTouLink)
+            Text: ="利用規約"
+            Width: =160
+            X: =46
+            Y: =Parent.Height - 68
+      - btnTouRow__UserCal:
+          Control: Classic/Button@2.2.0
+          Properties:
+            BorderThickness: =0
+            Color: =RGBA(0, 0, 0, 0)
+            Fill: =RGBA(0, 0, 0, 0)
+            FocusedBorderThickness: =0
+            Height: =44
+            HoverColor: =RGBA(0, 0, 0, 0)
+            HoverFill: =RGBA(0, 0, 0, 0)
+            OnSelect: =Launch(varTouLink)
+            PressedColor: =RGBA(0, 0, 0, 0)
+            PressedFill: =RGBA(0, 0, 0, 0)
+            RadiusBottomLeft: =0
+            RadiusBottomRight: =0
+            RadiusTopLeft: =0
+            RadiusTopRight: =0
+            Text: =""
+            Width: =190
+            X: =14
+            Y: =Parent.Height - 68
       - conMain_UserCal:
           Control: GroupContainer@1.5.0
           Variant: ManualLayout
@@ -346,158 +537,115 @@ Screens:
             Width: =Parent.Width - 220
             X: =220
           Children:
-            - lblCatFilterGuide_MU:
-                Control: Label@2.5.1
+            - btnRebuild_UserCal:
+                Control: Classic/Button@2.2.0
                 Properties:
-                  FontWeight: =FontWeight.Bold
-                  Height: =30
-                  Size: =12
-                  Text: ="大分類"
-                  Visible: =varViewMode = "month"
-                  Width: =70
-                  X: =30
-                  Y: =13
-            - galCatRadio_MU:
-                Control: Gallery@2.15.0
-                Variant: Vertical
-                Properties:
-                  Height: =30
-                  Items: =colCatRadio
+                  BorderThickness: =0
+                  Fill: =RGBA(0, 0, 0, 0)
+                  Height: =1
                   OnSelect: |-
-                    =// 大分類は複数選べる（押すたびに追加／解除）
-                    If(
-                        ThisItem.CategoryName in colCatSelected.CategoryName,
-                        RemoveIf(colCatSelected, CategoryName = ThisItem.CategoryName),
-                        Collect(colCatSelected, {CategoryName: ThisItem.CategoryName})
+                    =// カレンダー42セル（6週分）
+                    Set(varStart, DateAdd(varMonth, -(Weekday(varMonth) - 1), TimeUnit.Days));
+                    Set(varRangeEnd, DateAdd(varStart, 41, TimeUnit.Days));
+                    // 予約枠日マスタは当月ぶんだけ取得する（SlotDate の範囲比較は委任される）
+                    Set(varMonthEnd, DateAdd(DateAdd(varMonth, 1, TimeUnit.Months), -1, TimeUnit.Days));
+                    // ---- 予約データ（表示中の42日ぶんのみ取得＝委任対応） ----
+                    ClearCollect(
+                        colReservations,
+                        ForAll(
+                            Filter(予約リスト, ResDate >= varStart, ResDate <= varRangeEnd) As R,
+                            {
+                                ID: R.ID,
+                                Title: R.Title,
+                                FrameName: R.FrameName,
+                                PatternName: R.パターン名,
+                                ResDate: DateValue(Text(Coalesce(R.ResDate, Date(2000, 1, 1)), "yyyy/mm/dd")),
+                                StartTime: R.StartTime,
+                                SlotId: Coalesce(R.SlotId, 0),
+                                EndTime: R.EndTime,
+                                DurationMin: Coalesce(R.DurationMin, 0),
+                                SlotKey: R.SlotKey,
+                                Status: R.Status,
+                                AnswerJson: R.回答JSON,
+                                RejectReason: R.RejectReason,
+                                HeadCount: R.HeadCount
+                            }
+                        )
                     );
-                    // 中分類の選択肢を作り直す
-                    Select(btnBuildSubChoices_MU)
-                  ShowScrollbar: =false
-                  TemplatePadding: =0
-                  TemplateSize: =Self.Height
-                  Visible: =varViewMode = "month"
-                  Width: =1016
-                  WrapCount: =8
-                  X: =100
-                  Y: =13
-                Children:
-                  - rdoCatMark_MU:
-                      Control: Rectangle@2.3.0
-                      Properties:
-                        BorderColor: =RGBA(120, 130, 145, 1)
-                        BorderThickness: =1
-                        Fill: |-
-                          =If(
-                              ThisItem.CategoryName in colCatSelected.CategoryName,
-                              RGBA(0, 120, 212, 1),
-                              RGBA(255, 255, 255, 1)
-                          )
-                        Height: =14
-                        OnSelect: =Select(Parent)
-                        Width: =14
-                        X: =4
-                        Y: =(Parent.TemplateHeight / 2) - (Self.Height / 2)
-                  - lblCatName_MU:
-                      Control: Label@2.5.1
-                      Properties:
-                        Color: |-
-                          =If(
-                              ThisItem.CategoryName in colCatSelected.CategoryName,
-                              RGBA(0, 90, 180, 1),
-                              RGBA(70, 70, 70, 1)
-                          )
-                        FontWeight: |-
-                          =If(
-                              ThisItem.CategoryName in colCatSelected.CategoryName,
-                              FontWeight.Semibold,
-                              FontWeight.Normal
-                          )
-                        Height: =Parent.TemplateHeight
-                        OnSelect: =Select(Parent)
-                        Size: =11
-                        Text: =ThisItem.CategoryName
-                        Width: =88
-                        X: =24
-            - lblSubCatFilterGuide_MU:
-                Control: Label@2.5.1
-                Properties:
-                  FontWeight: =FontWeight.Bold
-                  Height: =30
-                  Size: =12
-                  Text: ="中分類"
-                  Visible: =varViewMode = "month" && Not(IsEmpty(colCatSelected))
-                  Width: =70
-                  X: =30
-                  Y: =43
-            - galSubCatCheck_MU:
-                Control: Gallery@2.15.0
-                Variant: Vertical
-                Properties:
-                  Height: =30
-                  Items: =colSubCatChoices
-                  OnSelect: |-
-                    =If(
-                        // 「すべて」を押したら個別のチェックはすべて外す
-                        ThisItem.CatKey = "*",
-                        Set(varSubCatAll, true);
-                        Clear(colSubCatSel2),
-                        // 個別を押したら「すべて」を外して、その項目を追加／解除する
-                        Set(varSubCatAll, false);
-                        If(
-                            ThisItem.CatKey in colSubCatSel2.CatKey,
-                            RemoveIf(colSubCatSel2, CatKey = ThisItem.CatKey),
-                            Collect(colSubCatSel2, {CatKey: ThisItem.CatKey})
-                        );
-                        // 個別が全部外れたら「すべて」に戻す
-                        If(IsEmpty(colSubCatSel2), Set(varSubCatAll, true))
+                    ClearCollect(
+                        colDays,
+                        ForAll(
+                            Sequence(42, 0) As S,
+                            {
+                                CellDate: DateAdd(varStart, S.Value, TimeUnit.Days),
+                                WeekIndex: RoundDown(S.Value / 7, 0) + 1
+                            }
+                        )
+                    );
+                    // ---- 予約枠日マスタ（当月ぶん）----
+                    ClearCollect(
+                        colCellFramesRaw,
+                        ForAll(
+                            Filter(予約枠日マスタ, SlotDate >= varMonth, SlotDate <= varMonthEnd) As D,
+                            {
+                                DayId: D.ID,
+                                CellDate: Coalesce(D.SlotDate, Date(2000, 1, 1)),
+                                FrameName: D.Title,
+                                FrameType: Coalesce(D.FrameType, "時間単位"),
+                                Category: D.Category,
+                                SubCategory: D.SubCategory,
+                                ColorR: Coalesce(D.ColorR, 126),
+                                ColorG: Coalesce(D.ColorG, 199),
+                                ColorB: Coalesce(D.ColorB, 216),
+                                PublishDate: D.PublishDate,
+                                TotalSlots: Coalesce(D.TotalSlots, 0),
+                                FullSlots: Coalesce(D.FullSlots, 0),
+                                CloseDaysBefore: Coalesce(D.CloseDaysBefore, 0),
+                                // 受付期限：開催日の N 日前まで受け付ける（N 日前の当日まで有効）
+                                CloseDate: DateAdd(
+                                    Coalesce(D.SlotDate, Date(2000, 1, 1)),
+                                    -Coalesce(D.CloseDaysBefore, 0),
+                                    TimeUnit.Days
+                                ),
+                                IsClosed: Today() >
+                                    DateAdd(
+                                        Coalesce(D.SlotDate, Date(2000, 1, 1)),
+                                        -Coalesce(D.CloseDaysBefore, 0),
+                                        TimeUnit.Days
+                                    ),
+                                // 満枠判定：埋まったスロット数が総スロット数に達したか
+                                IsFull: Coalesce(D.TotalSlots, 0) > 0 &&
+                                    Coalesce(D.FullSlots, 0) >= Coalesce(D.TotalSlots, 0)
+                            }
+                        )
+                    );
+                    // 利用者には公開済みの枠のみ表示する
+                    ClearCollect(
+                        colCellFrames,
+                        Filter(colCellFramesRaw, IsBlank(PublishDate) || PublishDate <= Now())
+                    );
+                    // ---- 週の高さを算出（絞り込み結果に追従させる）----
+                    // ---- 休業日マスタ（カレンダーに出す42日ぶん）----
+                    ClearCollect(
+                        colHolidays,
+                        ForAll(
+                            Filter(休業日マスタ, HolidayDate >= varStart, HolidayDate <= varRangeEnd) As H,
+                            {
+                                HolId: H.ID,
+                                HolDate: Coalesce(H.HolidayDate, Date(2000, 1, 1)),
+                                HolTitle: H.Title,
+                                HolCat: H.Category,
+                                HolSub: H.SubCategory,
+                                HolActive: Coalesce(H.IsActive, true)
+                            }
+                        )
                     );
                     Select(btnResizeWeeks_UserCal)
-                  ShowScrollbar: =false
-                  TemplatePadding: =0
-                  TemplateSize: =Self.Height
-                  Visible: =varViewMode = "month" && Not(IsEmpty(colCatSelected))
-                  Width: =1016
-                  WrapCount: =6
-                  X: =100
-                  Y: =43
-                Children:
-                  - recSubCatBox_MU:
-                      Control: Rectangle@2.3.0
-                      Properties:
-                        BorderColor: =RGBA(120, 130, 145, 1)
-                        BorderThickness: =1
-                        Fill: |-
-                          =If(
-                              If(ThisItem.CatKey = "*", varSubCatAll, ThisItem.CatKey in colSubCatSel2.CatKey),
-                              RGBA(0, 120, 212, 1),
-                              RGBA(255, 255, 255, 1)
-                          )
-                        Height: =14
-                        OnSelect: =Select(Parent)
-                        Width: =14
-                        X: =4
-                        Y: =(Parent.TemplateHeight - Self.Height) / 2
-                  - lblSubCatName_MU:
-                      Control: Label@2.5.1
-                      Properties:
-                        Color: |-
-                          =If(
-                              If(ThisItem.CatKey = "*", varSubCatAll, ThisItem.CatKey in colSubCatSel2.CatKey),
-                              RGBA(0, 90, 180, 1),
-                              RGBA(70, 70, 70, 1)
-                          )
-                        Height: =Parent.TemplateHeight
-                        OnSelect: =Select(Parent)
-                        Size: =11
-                        Text: |-
-                          =If(
-                              ThisItem.CatKey = "*",
-                              "すべて",
-                              ThisItem.CatName & " / " & ThisItem.SubName
-                          )
-                        Width: =136
-                        X: =24
-                        Y: =(Parent.TemplateHeight / 2) - (Self.Height / 2)
+                  Text: =""
+                  Visible: =false
+                  Width: =1
+                  X: =1140
+                  Y: =762
             - btnBuildSubChoices_MU:
                 Control: Classic/Button@2.2.0
                 Properties:
@@ -521,6 +669,7 @@ Screens:
                     Set(varSubCatAll, true);
                     Select(btnResizeWeeks_UserCal)
                   Text: =""
+                  Visible: =false
                   Width: =1
                   X: =1124
                   Y: =44
@@ -2694,6 +2843,327 @@ Screens:
                                           Width: =ThisItem.PosW - 6
                                           X: =ThisItem.PosX + 3
                                           Y: =ThisItem.PosY + 1 - (ThisItem.RowNum - 1) + 1.5
+            - conCatRadioWeek_U:
+                Control: GroupContainer@1.5.0
+                Variant: ManualLayout
+                Properties:
+                  DropShadow: =DropShadow.None
+                  Height: =60
+                  RadiusBottomLeft: =0
+                  RadiusBottomRight: =0
+                  RadiusTopLeft: =0
+                  RadiusTopRight: =0
+                  Visible: =varViewMode = "week"
+                  Width: =1086
+                  X: =30
+                  Y: =13
+                Children:
+                  - galSubCatCheck_UserCal:
+                      Control: Gallery@2.15.0
+                      Variant: Vertical
+                      Properties:
+                        Height: =30
+                        Items: |-
+                          =ForAll(
+                              Filter(colCategoryAll, カテゴリ = varCatFilter) As S,
+                              {SubCategoryName: S.サブカテゴリ}
+                          )
+                        OnSelect: |-
+                          =If(
+                              // 週表示のときだけ中分類の選択数を制限する（月表示では制限しない）
+                              varViewMode = "week" &&
+                                  Not(ThisItem.SubCategoryName in colSubCatSelected.SubCategoryName) &&
+                                  CountRows(colSubCatSelected) >= gMaxCols,
+                              Notify(
+                                  "週表示で選択できる中分類は " & gMaxCols & " つまでです",
+                                  NotificationType.Warning
+                              ),
+                              If(
+                                  ThisItem.SubCategoryName in colSubCatSelected.SubCategoryName,
+                                  RemoveIf(colSubCatSelected, SubCategoryName = ThisItem.SubCategoryName),
+                                  Collect(colSubCatSelected, {SubCategoryName: ThisItem.SubCategoryName})
+                              );
+                              // 絞り込みが変わったので週の高さを取り直す
+                              Select(btnResizeWeeks_UserCal);
+                              // 週表示のデータも取り直す
+                              If(varViewMode = "week", Select(btnRebuildWeek_UserCal))
+                          )
+                        TemplatePadding: =0
+                        TemplateSize: =Self.Height
+                        Visible: =!IsBlank(varCatFilter)
+                        Width: =1016
+                        WrapCount: =8
+                        X: =70
+                        Y: =30
+                      Children:
+                        - lblSubCatName_UserCal:
+                            Control: Label@2.5.1
+                            Properties:
+                              Color: |-
+                                =If(
+                                    ThisItem.SubCategoryName in colSubCatSelected.SubCategoryName,
+                                    RGBA(0, 90, 180, 1),
+                                    RGBA(70, 70, 70, 1)
+                                )
+                              Height: =Parent.TemplateHeight
+                              OnSelect: =Select(Parent)
+                              Size: =11
+                              Text: =ThisItem.SubCategoryName
+                              Width: =88
+                              X: =24
+                              Y: =(Parent.TemplateHeight / 2) - (Self.Height / 2)
+                        - recSubCatBox_UserCal:
+                            Control: Rectangle@2.3.0
+                            Properties:
+                              BorderColor: =RGBA(120, 130, 145, 1)
+                              BorderThickness: =1
+                              Fill: |-
+                                =If(
+                                    ThisItem.SubCategoryName in colSubCatSelected.SubCategoryName,
+                                    RGBA(0, 120, 212, 1),
+                                    RGBA(255, 255, 255, 1)
+                                )
+                              Height: =14
+                              OnSelect: =Select(Parent)
+                              Width: =14
+                              X: =4
+                              Y: =(Parent.TemplateHeight - Self.Height) / 2
+                  - lblSubCatFilterGuide_UserCal:
+                      Control: Label@2.5.1
+                      Properties:
+                        FontWeight: =FontWeight.Bold
+                        Height: =30
+                        Size: =12
+                        Text: ="中分類"
+                        Visible: =!IsBlank(varCatFilter)
+                        Width: =70
+                        Y: =30
+                  - galCatRadio_UserCal:
+                      Control: Gallery@2.15.0
+                      Variant: Vertical
+                      Properties:
+                        Height: =30
+                        Items: =colCatRadio
+                        OnSelect: |-
+                          =Set(varCatFilter, ThisItem.CategoryName);
+                          ClearCollect(colSubCatSelected, {SubCategoryName: ""});
+                          Clear(colSubCatSelected);
+                          // 絞り込みが変わったので週の高さを取り直す
+                          Select(btnResizeWeeks_UserCal);
+                          // 週表示のデータも取り直す
+                          If(varViewMode = "week", Select(btnRebuildWeek_UserCal))
+                        ShowScrollbar: =false
+                        TemplatePadding: =0
+                        TemplateSize: =Self.Height
+                        Width: =1016
+                        WrapCount: =8
+                        X: =70
+                      Children:
+                        - lblCatName_UserCal:
+                            Control: Label@2.5.1
+                            Properties:
+                              Color: |-
+                                =If(
+                                    ThisItem.CategoryName = varCatFilter,
+                                    RGBA(0, 90, 180, 1),
+                                    RGBA(70, 70, 70, 1)
+                                )
+                              FontWeight: |-
+                                =If(
+                                    ThisItem.CategoryName = varCatFilter,
+                                    FontWeight.Semibold,
+                                    FontWeight.Normal
+                                )
+                              Height: =30
+                              OnSelect: =Select(Parent)
+                              Size: =11
+                              Text: =ThisItem.CategoryName
+                              Width: =88
+                              X: =24
+                        - rdoCatMark_UserCal:
+                            Control: Rectangle@2.3.0
+                            Properties:
+                              BorderColor: =RGBA(120, 130, 145, 1)
+                              BorderThickness: =1
+                              Fill: |-
+                                =If(
+                                    ThisItem.CategoryName = varCatFilter,
+                                    RGBA(0, 120, 212, 1),
+                                    RGBA(255, 255, 255, 1)
+                                )
+                              Height: =14
+                              OnSelect: =Select(Parent)
+                              Width: =14
+                              X: =4
+                              Y: =(Parent.TemplateHeight / 2) - (Self.Height / 2)
+                  - lblCatFilterGuide_UserCal:
+                      Control: Label@2.5.1
+                      Properties:
+                        FontWeight: =FontWeight.Bold
+                        Height: =30
+                        Size: =12
+                        Text: ="大分類"
+                        Width: =70
+            - conCatRadioMonth_U:
+                Control: GroupContainer@1.5.0
+                Variant: ManualLayout
+                Properties:
+                  DropShadow: =DropShadow.None
+                  Height: =60
+                  RadiusBottomLeft: =0
+                  RadiusBottomRight: =0
+                  RadiusTopLeft: =0
+                  RadiusTopRight: =0
+                  Visible: =varViewMode = "month"
+                  Width: =1086
+                  X: =30
+                  Y: =13
+                Children:
+                  - galSubCatCheck_MU:
+                      Control: Gallery@2.15.0
+                      Variant: Vertical
+                      Properties:
+                        Height: =30
+                        Items: =colSubCatChoices
+                        OnSelect: |-
+                          =If(
+                              // 「すべて」を押したら個別のチェックはすべて外す
+                              ThisItem.CatKey = "*",
+                              Set(varSubCatAll, true);
+                              Clear(colSubCatSel2),
+                              // 個別を押したら「すべて」を外して、その項目を追加／解除する
+                              Set(varSubCatAll, false);
+                              If(
+                                  ThisItem.CatKey in colSubCatSel2.CatKey,
+                                  RemoveIf(colSubCatSel2, CatKey = ThisItem.CatKey),
+                                  Collect(colSubCatSel2, {CatKey: ThisItem.CatKey})
+                              );
+                              // 個別が全部外れたら「すべて」に戻す
+                              If(IsEmpty(colSubCatSel2), Set(varSubCatAll, true))
+                          );
+                          Select(btnResizeWeeks_UserCal)
+                        TemplatePadding: =0
+                        TemplateSize: =Self.Height
+                        Visible: =Not(IsEmpty(colCatSelected))
+                        Width: =1016
+                        WrapCount: =8
+                        X: =70
+                        Y: =30
+                      Children:
+                        - recSubCatBox_MU:
+                            Control: Rectangle@2.3.0
+                            Properties:
+                              BorderColor: =RGBA(120, 130, 145, 1)
+                              BorderThickness: =1
+                              Fill: |-
+                                =If(
+                                    If(ThisItem.CatKey = "*", varSubCatAll, ThisItem.CatKey in colSubCatSel2.CatKey),
+                                    RGBA(0, 120, 212, 1),
+                                    RGBA(255, 255, 255, 1)
+                                )
+                              Height: =14
+                              OnSelect: =Select(Parent)
+                              Width: =14
+                              X: =4
+                              Y: =(Parent.TemplateHeight - Self.Height) / 2
+                        - lblSubCatName_MU:
+                            Control: Label@2.5.1
+                            Properties:
+                              Color: |-
+                                =If(
+                                    If(ThisItem.CatKey = "*", varSubCatAll, ThisItem.CatKey in colSubCatSel2.CatKey),
+                                    RGBA(0, 90, 180, 1),
+                                    RGBA(70, 70, 70, 1)
+                                )
+                              Height: =30
+                              OnSelect: =Select(Parent)
+                              Size: =11
+                              Text: |-
+                                =If(
+                                    ThisItem.CatKey = "*",
+                                    "すべて",
+                                    ThisItem.SubName
+                                )
+                              Width: =Parent.TemplateWidth - Self.X
+                              X: =24
+                              Y: =(Parent.TemplateHeight / 2) - (Self.Height / 2)
+                  - lblSubCatFilterGuide_MU:
+                      Control: Label@2.5.1
+                      Properties:
+                        FontWeight: =FontWeight.Bold
+                        Height: =30
+                        Size: =12
+                        Text: ="中分類"
+                        Visible: =Not(IsEmpty(colCatSelected))
+                        Width: =70
+                        Y: =30
+                  - galCatRadio_MU:
+                      Control: Gallery@2.15.0
+                      Variant: Vertical
+                      Properties:
+                        Height: =30
+                        Items: =colCatRadio
+                        OnSelect: |-
+                          =// 大分類は複数選べる（押すたびに追加／解除）
+                          If(
+                              ThisItem.CategoryName in colCatSelected.CategoryName,
+                              RemoveIf(colCatSelected, CategoryName = ThisItem.CategoryName),
+                              Collect(colCatSelected, {CategoryName: ThisItem.CategoryName})
+                          );
+                          // 中分類の選択肢を作り直す
+                          Select(btnBuildSubChoices_MU)
+                        ShowScrollbar: =false
+                        TemplatePadding: =0
+                        TemplateSize: =Self.Height
+                        Width: =1016
+                        WrapCount: =8
+                        X: =70
+                      Children:
+                        - rdoCatMark_MU:
+                            Control: Rectangle@2.3.0
+                            Properties:
+                              BorderColor: =RGBA(120, 130, 145, 1)
+                              BorderThickness: =1
+                              Fill: |-
+                                =If(
+                                    ThisItem.CategoryName in colCatSelected.CategoryName,
+                                    RGBA(0, 120, 212, 1),
+                                    RGBA(255, 255, 255, 1)
+                                )
+                              Height: =14
+                              OnSelect: =Select(Parent)
+                              Width: =14
+                              X: =4
+                              Y: =(Parent.TemplateHeight / 2) - (Self.Height / 2)
+                        - lblCatName_MU:
+                            Control: Label@2.5.1
+                            Properties:
+                              Color: |-
+                                =If(
+                                    ThisItem.CategoryName in colCatSelected.CategoryName,
+                                    RGBA(0, 90, 180, 1),
+                                    RGBA(70, 70, 70, 1)
+                                )
+                              FontWeight: |-
+                                =If(
+                                    ThisItem.CategoryName in colCatSelected.CategoryName,
+                                    FontWeight.Semibold,
+                                    FontWeight.Normal
+                                )
+                              Height: =Parent.TemplateHeight
+                              OnSelect: =Select(Parent)
+                              Size: =11
+                              Text: =ThisItem.CategoryName
+                              Width: =Parent.TemplateWidth - Self.X
+                              X: =24
+                  - lblCatFilterGuide_MU:
+                      Control: Label@2.5.1
+                      Properties:
+                        FontWeight: =FontWeight.Bold
+                        Height: =30
+                        Size: =12
+                        Text: ="大分類"
+                        Width: =70
             - btnViewMonth_UserCal:
                 Control: Classic/Button@2.2.0
                 Properties:
@@ -2752,158 +3222,6 @@ Screens:
                   Width: =60
                   X: =1056
                   Y: =80
-            - galSubCatCheck_UserCal:
-                Control: Gallery@2.15.0
-                Variant: Vertical
-                Properties:
-                  Height: =30
-                  Items: |-
-                    =ForAll(
-                        Filter(colCategoryAll, カテゴリ = varCatFilter) As S,
-                        {SubCategoryName: S.サブカテゴリ}
-                    )
-                  OnSelect: |-
-                    =If(
-                        // 週表示のときだけ中分類の選択数を制限する（月表示では制限しない）
-                        varViewMode = "week" &&
-                            Not(ThisItem.SubCategoryName in colSubCatSelected.SubCategoryName) &&
-                            CountRows(colSubCatSelected) >= gMaxCols,
-                        Notify(
-                            "週表示で選択できる中分類は " & gMaxCols & " つまでです",
-                            NotificationType.Warning
-                        ),
-                        If(
-                            ThisItem.SubCategoryName in colSubCatSelected.SubCategoryName,
-                            RemoveIf(colSubCatSelected, SubCategoryName = ThisItem.SubCategoryName),
-                            Collect(colSubCatSelected, {SubCategoryName: ThisItem.SubCategoryName})
-                        );
-                        // 絞り込みが変わったので週の高さを取り直す
-                        Select(btnResizeWeeks_UserCal);
-                        // 週表示のデータも取り直す
-                        If(varViewMode = "week", Select(btnRebuildWeek_UserCal))
-                    )
-                  TemplatePadding: =0
-                  TemplateSize: =Self.Height
-                  Visible: =varViewMode = "week" && !IsBlank(varCatFilter)
-                  Width: =1016
-                  WrapCount: =8
-                  X: =100
-                  Y: =43
-                Children:
-                  - lblSubCatName_UserCal:
-                      Control: Label@2.5.1
-                      Properties:
-                        Color: |-
-                          =If(
-                              ThisItem.SubCategoryName in colSubCatSelected.SubCategoryName,
-                              RGBA(0, 90, 180, 1),
-                              RGBA(70, 70, 70, 1)
-                          )
-                        Height: =Parent.TemplateHeight
-                        OnSelect: =Select(Parent)
-                        Size: =11
-                        Text: =ThisItem.SubCategoryName
-                        Width: =88
-                        X: =24
-                        Y: =(Parent.TemplateHeight / 2) - (Self.Height / 2)
-                  - recSubCatBox_UserCal:
-                      Control: Rectangle@2.3.0
-                      Properties:
-                        BorderColor: =RGBA(120, 130, 145, 1)
-                        BorderThickness: =1
-                        Fill: |-
-                          =If(
-                              ThisItem.SubCategoryName in colSubCatSelected.SubCategoryName,
-                              RGBA(0, 120, 212, 1),
-                              RGBA(255, 255, 255, 1)
-                          )
-                        Height: =14
-                        OnSelect: =Select(Parent)
-                        Width: =14
-                        X: =4
-                        Y: =(Parent.TemplateHeight - Self.Height) / 2
-            - lblSubCatFilterGuide_UserCal:
-                Control: Label@2.5.1
-                Properties:
-                  FontWeight: =FontWeight.Bold
-                  Height: =30
-                  Size: =12
-                  Text: ="中分類"
-                  Visible: =varViewMode = "week" && !IsBlank(varCatFilter)
-                  Width: =70
-                  X: =30
-                  Y: =43
-            - galCatRadio_UserCal:
-                Control: Gallery@2.15.0
-                Variant: Vertical
-                Properties:
-                  Height: =30
-                  Items: =colCatRadio
-                  OnSelect: |-
-                    =Set(varCatFilter, ThisItem.CategoryName);
-                    ClearCollect(colSubCatSelected, {SubCategoryName: ""});
-                    Clear(colSubCatSelected);
-                    // 絞り込みが変わったので週の高さを取り直す
-                    Select(btnResizeWeeks_UserCal);
-                    // 週表示のデータも取り直す
-                    If(varViewMode = "week", Select(btnRebuildWeek_UserCal))
-                  ShowScrollbar: =false
-                  TemplatePadding: =0
-                  TemplateSize: =Self.Height
-                  Visible: =varViewMode = "week"
-                  Width: =1016
-                  WrapCount: =8
-                  X: =100
-                  Y: =13
-                Children:
-                  - lblCatName_UserCal:
-                      Control: Label@2.5.1
-                      Properties:
-                        Color: |-
-                          =If(
-                              ThisItem.CategoryName = varCatFilter,
-                              RGBA(0, 90, 180, 1),
-                              RGBA(70, 70, 70, 1)
-                          )
-                        FontWeight: |-
-                          =If(
-                              ThisItem.CategoryName = varCatFilter,
-                              FontWeight.Semibold,
-                              FontWeight.Normal
-                          )
-                        Height: =30
-                        OnSelect: =Select(Parent)
-                        Size: =11
-                        Text: =ThisItem.CategoryName
-                        Width: =88
-                        X: =24
-                  - rdoCatMark_UserCal:
-                      Control: Rectangle@2.3.0
-                      Properties:
-                        BorderColor: =RGBA(120, 130, 145, 1)
-                        BorderThickness: =1
-                        Fill: |-
-                          =If(
-                              ThisItem.CategoryName = varCatFilter,
-                              RGBA(0, 120, 212, 1),
-                              RGBA(255, 255, 255, 1)
-                          )
-                        Height: =14
-                        OnSelect: =Select(Parent)
-                        Width: =14
-                        X: =4
-                        Y: =(Parent.TemplateHeight / 2) - (Self.Height / 2)
-            - lblCatFilterGuide_UserCal:
-                Control: Label@2.5.1
-                Properties:
-                  FontWeight: =FontWeight.Bold
-                  Height: =30
-                  Size: =12
-                  Text: ="大分類"
-                  Visible: =varViewMode = "week"
-                  Width: =70
-                  X: =30
-                  Y: =13
             - btnResizeWeeks_UserCal:
                 Control: Classic/Button@2.2.0
                 Properties:
@@ -2917,32 +3235,34 @@ Screens:
                         colDayHoliday,
                         ForAll(
                             colDays As D,
-                            With(
-                                {
-                                    hAll: LookUp(
-                                        colHolidays,
-                                        HolActive && HolDate = D.CellDate &&
-                                            (IsBlank(HolCat) || HolCat = varCatFilter) &&
-                                            IsBlank(HolSub)
-                                    ),
-                                    hSub: LookUp(
-                                        colHolidays,
-                                        HolActive && HolDate = D.CellDate &&
-                                            (IsBlank(HolCat) || HolCat = varCatFilter) &&
-                                            !IsBlank(HolSub) &&
-                                            HolSub in colSubCatSelected.SubCategoryName
-                                    )
-                                },
-                                {
-                                    CellDate: D.CellDate,
-                                    // 分類指定なし／大分類のみ → その日は休業日だけを表示する
-                                    TitleAll: hAll.HolTitle,
-                                    // 中分類まで指定 → 枠の先頭に休業日を足す
-                                    TitleSub: If(IsBlank(hAll.HolTitle), hSub.HolTitle, Blank()),
-                                    // その中分類の枠はチップを出さない（休業日に置き換える）
-                                    SubHidden: If(IsBlank(hAll.HolTitle), hSub.HolSub, Blank())
-                                }
-                            )
+                            {
+                                CellDate: D.CellDate,
+                                // 分類の指定が無い休業日 → その日は休業日だけを表示する
+                                TitleAll: LookUp(
+                                    colHolidays,
+                                    HolActive && HolDate = D.CellDate &&
+                                        IsBlank(HolCat) && IsBlank(HolSub)
+                                ).HolTitle
+                            }
+                        )
+                    );
+                    // 分類が指定された休業日のうち、選択中の大分類に該当するものだけを拾う
+                    // （大分類のみの指定も、中分類指定と同じ「部分的な休業」として扱う）
+                    ClearCollect(
+                        colHolidayHit,
+                        ForAll(
+                            Filter(
+                                colHolidays,
+                                HolActive,
+                                Not(IsBlank(HolCat)),
+                                HolCat in colCatSelected.CategoryName
+                            ) As Z,
+                            {
+                                CellDate: Z.HolDate,
+                                HolTitle: Z.HolTitle,
+                                HolCat: Z.HolCat,
+                                HolSub: Z.HolSub
+                            }
                         )
                     );
                     // ---- セルに並べるチップを確定させる（休業日 + 枠）----
@@ -2961,7 +3281,7 @@ Screens:
                         colDayHoliday As H,
                         If(
                             !IsBlank(H.TitleAll),
-                            // 休業日だけに置き換える
+                            // 分類の指定が無い休業日 → その日は休業日だけに置き換える
                             Collect(
                                 colCellDisplay,
                                 {
@@ -2972,13 +3292,13 @@ Screens:
                                     CloseDate: H.CellDate, IsClosed: false, IsFull: false, IsHoliday: true
                                 }
                             ),
-                            // 中分類指定の休業日は先頭に足したうえで、枠もそのまま並べる
-                            If(
-                                !IsBlank(H.TitleSub),
-                                Collect(
-                                    colCellDisplay,
+                            // 分類が指定された休業日は該当するぶんだけ先頭に積む
+                            Collect(
+                                colCellDisplay,
+                                ForAll(
+                                    Filter(colHolidayHit, CellDate = H.CellDate) As Q,
                                     {
-                                        DayId: 0, CellDate: H.CellDate, FrameName: H.TitleSub, FrameType: "",
+                                        DayId: 0, CellDate: H.CellDate, FrameName: Q.HolTitle, FrameType: "",
                                         Category: "", SubCategory: "",
                                         ColorR: 205, ColorG: 205, ColorB: 205,
                                         PublishDate: Blank(), TotalSlots: 0, FullSlots: 0, CloseDaysBefore: 0,
@@ -2990,16 +3310,27 @@ Screens:
                                 colCellDisplay,
                                 ForAll(
                                     Filter(
-                                        colCellFrames,
-                                        CellDate = H.CellDate,
-                                        !IsBlank(varCatFilter),
-                                        Category = varCatFilter,
-                                        Not(IsEmpty(colSubCatSelected)),
-                                        SubCategory in colSubCatSelected.SubCategoryName,
-                                        // 休業日で中分類まで指定された枠は表示しない
-                                        IsBlank(H.SubHidden) || SubCategory <> H.SubHidden,
+                                        colCellFrames As G,
+                                        G.CellDate = H.CellDate,
+                                        Not(IsEmpty(colCatSelected)),
+                                        G.Category in colCatSelected.CategoryName,
+                                        // 「すべて」なら有効な分類すべて、そうでなければ選ばれた分類だけ
+                                        If(
+                                            varSubCatAll,
+                                            (G.Category & "|" & G.SubCategory) in colValidKeys.CatKey,
+                                            (G.Category & "|" & G.SubCategory) in colSubCatSel2.CatKey
+                                        ),
                                         // 公開前の枠は表示しない
-                                        IsBlank(PublishDate) || PublishDate <= Now()
+                                        IsBlank(G.PublishDate) || G.PublishDate <= Now(),
+                                        // 休業日に当たる枠はチップを出さない（休業日に置き換える）
+                                        IsEmpty(
+                                            Filter(
+                                                colHolidayHit,
+                                                CellDate = H.CellDate,
+                                                HolCat = G.Category,
+                                                IsBlank(HolSub) || HolSub = G.SubCategory
+                                            )
+                                        )
                                     ) As F,
                                     {
                                         DayId: F.DayId, CellDate: F.CellDate, FrameName: F.FrameName,
@@ -3014,47 +3345,39 @@ Screens:
                             )
                         )
                     );
-                    // ---- 週の基本高さを算出（枠数に応じた必要高さ / 空の週は最低高さ）----
+                    // ---- 週ごとの高さを算出 ----
+                    // その週の中で最もチップが多い日の数と、当月の日を含むかを求める
                     ClearCollect(
                         colWeeksBase,
                         ForAll(
                             Sequence(6, 1) As W,
-                            With(
-                                {
-                                    mf: Coalesce(
-                                        Max(
-                                            ForAll(
-                                                Filter(colDays, WeekIndex = W.Value) As D,
-                                                {
-                                                    // セルに実際に表示される枠だけを数える
-                                                    // セルに実際に並ぶチップ（休業日を含む）を数える
-                                                    N: CountRows(Filter(colCellDisplay, CellDate = D.CellDate))
-                                                }
-                                            ),
-                                            N
+                            {
+                                WeekIndex: W.Value,
+                                MaxFrames: Coalesce(
+                                    Max(
+                                        ForAll(
+                                            Filter(colDays, WeekIndex = W.Value) As D,
+                                            {
+                                                // セルに実際に並ぶチップ（休業日を含む）を数える
+                                                N: CountRows(Filter(colCellDisplay, CellDate = D.CellDate))
+                                            }
                                         ),
-                                        0
-                                    )
-                                },
-                                {
-                                    WeekIndex: W.Value,
-                                    MaxFrames: mf,
-                                    // その週に当月の日が1日でも含まれるか（6週目の要否判定に使う）
-                                    HasDays: CountRows(
-                                        Filter(colDays, WeekIndex = W.Value, Month(CellDate) = Month(varMonth))
-                                    ) > 0,
-                                    BaseH: Max(varWeekMinHeight, If(mf = 0, 64, 22 + mf * 32 + 8))
-                                }
-                            )
+                                        N
+                                    ),
+                                    0
+                                ),
+                                // その週に当月の日が1日でも含まれるか（6週目の要否判定に使う）
+                                HasDays: CountRows(
+                                    Filter(colDays, WeekIndex = W.Value, Month(CellDate) = Month(varMonth))
+                                ) > 0
+                            }
                         )
                     );
-                    // ---- 親コンテナーの高さに合わせて余白を配分する ----
-                    // 表示対象の週（当月の日を含む週）だけを対象にする
-                    Set(varVisibleWeeks, CountRows(Filter(colWeeksBase, HasDays)));
-                    Set(varNeededH, Sum(Filter(colWeeksBase, HasDays), BaseH));
-                    Set(varSpareH, Max(0, varWeeksAreaHeight - varNeededH));
-                    // 枠がある週の枠数合計（比例配分の分母）
-                    Set(varTotalFrames, Sum(Filter(colWeeksBase, HasDays), MaxFrames));
+                    // 表示する週数で領域を等分したものを、各週の最低高さとする
+                    Set(varVisibleWeeks, Max(1, CountRows(Filter(colWeeksBase, HasDays))));
+                    Set(varWeekBaseH, RoundDown(varWeeksAreaHeight / varVisibleWeeks, 0));
+                    // その高さに収まるチップ数（26 は日付ラベル22px ＋ 下余白4px）
+                    Set(varFitFrames, Max(0, RoundDown((varWeekBaseH - 26) / 32, 0)));
                     ClearCollect(
                         colWeeks,
                         ForAll(
@@ -3063,19 +3386,8 @@ Screens:
                                 WeekIndex: B.WeekIndex,
                                 MaxFrames: B.MaxFrames,
                                 HasDays: B.HasDays,
-                                RowH: B.BaseH +
-                                    If(
-                                        // 非表示の週、または余白がない場合は配分しない
-                                        !B.HasDays || varSpareH <= 0,
-                                        0,
-                                        // どの週にも枠がない場合は全表示週へ均等配分
-                                        varTotalFrames = 0,
-                                        RoundDown(varSpareH / Max(varVisibleWeeks, 1), 0),
-                                        // 枠がある週にだけ、枠数に比例して配分（空の週は最低高さのまま）
-                                        B.MaxFrames = 0,
-                                        0,
-                                        RoundDown(varSpareH * B.MaxFrames / varTotalFrames, 0)
-                                    )
+                                // 収まらないチップの数だけ、テンプレートサイズ(32px)を足す
+                                RowH: varWeekBaseH + Max(0, B.MaxFrames - varFitFrames) * 32
                             }
                         )
                     )
@@ -3083,115 +3395,6 @@ Screens:
                   Visible: =false
                   Width: =1
                   X: =1136
-                  Y: =762
-            - btnRebuild_UserCal:
-                Control: Classic/Button@2.2.0
-                Properties:
-                  BorderThickness: =0
-                  Fill: =RGBA(0, 0, 0, 0)
-                  Height: =1
-                  OnSelect: |-
-                    =// カレンダー42セル（6週分）
-                    Set(varStart, DateAdd(varMonth, -(Weekday(varMonth) - 1), TimeUnit.Days));
-                    Set(varRangeEnd, DateAdd(varStart, 41, TimeUnit.Days));
-                    // 予約枠日マスタは当月ぶんだけ取得する（SlotDate の範囲比較は委任される）
-                    Set(varMonthEnd, DateAdd(DateAdd(varMonth, 1, TimeUnit.Months), -1, TimeUnit.Days));
-                    // ---- 予約データ（表示中の42日ぶんのみ取得＝委任対応） ----
-                    ClearCollect(
-                        colReservations,
-                        ForAll(
-                            Filter(予約リスト, ResDate >= varStart, ResDate <= varRangeEnd) As R,
-                            {
-                                ID: R.ID,
-                                Title: R.Title,
-                                FrameName: R.FrameName,
-                                PatternName: R.パターン名,
-                                ResDate: DateValue(Text(Coalesce(R.ResDate, Date(2000, 1, 1)), "yyyy/mm/dd")),
-                                StartTime: R.StartTime,
-                                SlotId: Coalesce(R.SlotId, 0),
-                                EndTime: R.EndTime,
-                                DurationMin: Coalesce(R.DurationMin, 0),
-                                SlotKey: R.SlotKey,
-                                Status: R.Status,
-                                AnswerJson: R.回答JSON,
-                                RejectReason: R.RejectReason,
-                                HeadCount: R.HeadCount
-                            }
-                        )
-                    );
-                    ClearCollect(
-                        colDays,
-                        ForAll(
-                            Sequence(42, 0) As S,
-                            {
-                                CellDate: DateAdd(varStart, S.Value, TimeUnit.Days),
-                                WeekIndex: RoundDown(S.Value / 7, 0) + 1
-                            }
-                        )
-                    );
-                    // ---- 予約枠日マスタ（当月ぶん）----
-                    ClearCollect(
-                        colCellFramesRaw,
-                        ForAll(
-                            Filter(予約枠日マスタ, SlotDate >= varMonth, SlotDate <= varMonthEnd) As D,
-                            {
-                                DayId: D.ID,
-                                CellDate: Coalesce(D.SlotDate, Date(2000, 1, 1)),
-                                FrameName: D.Title,
-                                FrameType: Coalesce(D.FrameType, "時間単位"),
-                                Category: D.Category,
-                                SubCategory: D.SubCategory,
-                                ColorR: Coalesce(D.ColorR, 126),
-                                ColorG: Coalesce(D.ColorG, 199),
-                                ColorB: Coalesce(D.ColorB, 216),
-                                PublishDate: D.PublishDate,
-                                TotalSlots: Coalesce(D.TotalSlots, 0),
-                                FullSlots: Coalesce(D.FullSlots, 0),
-                                CloseDaysBefore: Coalesce(D.CloseDaysBefore, 0),
-                                // 受付期限：開催日の N 日前まで受け付ける（N 日前の当日まで有効）
-                                CloseDate: DateAdd(
-                                    Coalesce(D.SlotDate, Date(2000, 1, 1)),
-                                    -Coalesce(D.CloseDaysBefore, 0),
-                                    TimeUnit.Days
-                                ),
-                                IsClosed: Today() >
-                                    DateAdd(
-                                        Coalesce(D.SlotDate, Date(2000, 1, 1)),
-                                        -Coalesce(D.CloseDaysBefore, 0),
-                                        TimeUnit.Days
-                                    ),
-                                // 満枠判定：埋まったスロット数が総スロット数に達したか
-                                IsFull: Coalesce(D.TotalSlots, 0) > 0 &&
-                                    Coalesce(D.FullSlots, 0) >= Coalesce(D.TotalSlots, 0)
-                            }
-                        )
-                    );
-                    // 利用者には公開済みの枠のみ表示する
-                    ClearCollect(
-                        colCellFrames,
-                        Filter(colCellFramesRaw, IsBlank(PublishDate) || PublishDate <= Now())
-                    );
-                    // ---- 週の高さを算出（絞り込み結果に追従させる）----
-                    // ---- 休業日マスタ（カレンダーに出す42日ぶん）----
-                    ClearCollect(
-                        colHolidays,
-                        ForAll(
-                            Filter(休業日マスタ, HolidayDate >= varStart, HolidayDate <= varRangeEnd) As H,
-                            {
-                                HolId: H.ID,
-                                HolDate: Coalesce(H.HolidayDate, Date(2000, 1, 1)),
-                                HolTitle: H.Title,
-                                HolCat: H.Category,
-                                HolSub: H.SubCategory,
-                                HolActive: Coalesce(H.IsActive, true)
-                            }
-                        )
-                    );
-                    Select(btnResizeWeeks_UserCal)
-                  Text: =""
-                  Visible: =false
-                  Width: =1
-                  X: =1140
                   Y: =762
             - recOverlay_UserCal:
                 Control: Rectangle@2.3.0
@@ -3460,197 +3663,6 @@ Screens:
                               Width: =231
                               X: =140
                               Y: =8
-      - galSideMenu__UserCal:
-          Control: Gallery@2.15.0
-          Variant: Vertical
-          Properties:
-            Height: =Parent.Height - 100
-            Items: |-
-              =SortByColumns(
-                  Table(
-                      {MenuId: 12, ParentId: 0, Level: 1, SortNo: 50, Icon: "📢", Label: "お知らせ", ScreenKey: "scnNotice"},
-                      {MenuId: 1, ParentId: 0, Level: 1, SortNo: 100, Icon: "🎪", Label: "イベント参照", ScreenKey: ""},
-                      {MenuId: 11, ParentId: 1, Level: 2, SortNo: 115, Icon: "📅", Label: "カレンダー", ScreenKey: "scnCalendarUser"},
-                      {MenuId: 3, ParentId: 1, Level: 2, SortNo: 120, Icon: "☰", Label: "一覧", ScreenKey: "list"},
-                      {MenuId: 9, ParentId: 0, Level: 1, SortNo: 400, Icon: "📋", Label: "予約一覧", ScreenKey: "scnMyReservations"}
-                  ),
-                  "SortNo"
-              )
-            OnSelect: |-
-              =Switch(
-                  ThisItem.ScreenKey,
-                  "scnNotice", Navigate(scnNoticeUser, ScreenTransition.None),
-                  "scnCalendarUser", Navigate(scnCalendarUser, ScreenTransition.None),
-                  "scnMyReservations", Navigate(scnReservationsUser, ScreenTransition.None),
-                  "list", Navigate(scnCalendarListUser, ScreenTransition.None)
-              )
-            ShowScrollbar: =false
-            TemplatePadding: =0
-            TemplateSize: =44
-            Width: =220
-            Y: =14
-          Children:
-            - recMenuRowBg_UserCal:
-                Control: Rectangle@2.3.0
-                Properties:
-                  Fill: |-
-                    =If(
-                        !IsBlank(ThisItem.ScreenKey) && ThisItem.ScreenKey =
-                    If(
-                        App.ActiveScreen = scnNoticeUser,
-                        "scnNotice",
-                        App.ActiveScreen = scnCalendarUser || App.ActiveScreen = scnReserveEntryUser,
-                        "scnCalendarUser",
-                        App.ActiveScreen = scnReservationsUser,
-                        "scnMyReservations",
-                        ""
-                    ),
-                        RGBA(230, 241, 251, 1),
-                        RGBA(0, 0, 0, 0)
-                    )
-                  Height: =44
-                  OnSelect: =Select(Parent)
-                  Width: =Parent.TemplateWidth
-            - recMenuAccent_UserCal:
-                Control: Rectangle@2.3.0
-                Properties:
-                  Fill: |-
-                    =If(
-                        !IsBlank(ThisItem.ScreenKey) && ThisItem.ScreenKey =
-                    If(
-                        App.ActiveScreen = scnNoticeUser,
-                        "scnNotice",
-                        App.ActiveScreen = scnCalendarUser || App.ActiveScreen = scnReserveEntryUser,
-                        "scnCalendarUser",
-                        App.ActiveScreen = scnReservationsUser,
-                        "scnMyReservations",
-                        ""
-                    ),
-                        RGBA(0, 120, 212, 1),
-                        RGBA(0, 0, 0, 0)
-                    )
-                  Height: =44
-                  Width: =3
-            - lblMenuIcon_UserCal:
-                Control: Label@2.5.1
-                Properties:
-                  Align: =Align.Center
-                  Color: |-
-                    =If(
-                        !IsBlank(ThisItem.ScreenKey) && ThisItem.ScreenKey =
-                    If(
-                        App.ActiveScreen = scnNoticeUser,
-                        "scnNotice",
-                        App.ActiveScreen = scnCalendarUser || App.ActiveScreen = scnReserveEntryUser,
-                        "scnCalendarUser",
-                        App.ActiveScreen = scnReservationsUser,
-                        "scnMyReservations",
-                        ""
-                    ),
-                        RGBA(0, 90, 180, 1),
-                        RGBA(90, 130, 175, 1)
-                    )
-                  Height: =44
-                  OnSelect: =Select(Parent)
-                  Text: =ThisItem.Icon
-                  Width: =26
-                  X: =If(ThisItem.Level = 1, 16, 38)
-            - lblMenuLabel_UserCal:
-                Control: Label@2.5.1
-                Properties:
-                  Color: |-
-                    =If(
-                        !IsBlank(ThisItem.ScreenKey) && ThisItem.ScreenKey =
-                    If(
-                        App.ActiveScreen = scnNoticeUser,
-                        "scnNotice",
-                        App.ActiveScreen = scnCalendarUser || App.ActiveScreen = scnReserveEntryUser,
-                        "scnCalendarUser",
-                        App.ActiveScreen = scnReservationsUser,
-                        "scnMyReservations",
-                        ""
-                    ),
-                        RGBA(0, 90, 180, 1),
-                        ThisItem.Level = 1,
-                        RGBA(90, 130, 175, 1),
-                        RGBA(70, 70, 70, 1)
-                    )
-                  FontWeight: =If(ThisItem.Level = 1, FontWeight.Semibold, FontWeight.Normal)
-                  Height: =44
-                  OnSelect: =Select(Parent)
-                  Text: =ThisItem.Label
-                  Width: =If(ThisItem.Level = 1, 160, 140)
-                  X: =If(ThisItem.Level = 1, 46, 68)
-            - btnMenuRow__UserCal:
-                Control: Classic/Button@2.2.0
-                Properties:
-                  BorderThickness: =0
-                  Color: =RGBA(0, 0, 0, 0)
-                  DisabledFill: =RGBA(0, 0, 0, 0)
-                  DisplayMode: =If(IsBlank(ThisItem.ScreenKey), DisplayMode.Disabled, DisplayMode.Edit)
-                  Fill: =RGBA(0, 0, 0, 0)
-                  FocusedBorderThickness: =0
-                  Height: =44
-                  HoverFill: =RGBA(230, 241, 251, 0.55)
-                  OnSelect: =Select(Parent)
-                  PressedColor: =RGBA(0, 0, 0, 0)
-                  PressedFill: =RGBA(230, 241, 251, 0.8)
-                  RadiusBottomLeft: =0
-                  RadiusBottomRight: =0
-                  RadiusTopLeft: =0
-                  RadiusTopRight: =0
-                  Text: =""
-                  Width: =Parent.TemplateWidth
-      - recSideDivider__UserCal:
-          Control: Rectangle@2.3.0
-          Properties:
-            Fill: =RGBA(224, 228, 233, 1)
-            Height: =1
-            Width: =188
-            X: =16
-            Y: =Parent.Height - 84
-      - lblTouIcon__UserCal:
-          Control: Label@2.5.1
-          Properties:
-            Color: =RGBA(90, 95, 105, 1)
-            Height: =44
-            OnSelect: =Launch(varTouLink)
-            Text: |-
-              ="📄"
-            Width: =26
-            X: =16
-            Y: =Parent.Height - 68
-      - lblTouLabel__UserCal:
-          Control: Label@2.5.1
-          Properties:
-            Color: =RGBA(60, 65, 75, 1)
-            Height: =44
-            OnSelect: =Launch(varTouLink)
-            Text: ="利用規約"
-            Width: =160
-            X: =46
-            Y: =Parent.Height - 68
-      - btnTouRow__UserCal:
-          Control: Classic/Button@2.2.0
-          Properties:
-            BorderThickness: =0
-            Color: =RGBA(0, 0, 0, 0)
-            Fill: =RGBA(0, 0, 0, 0)
-            FocusedBorderThickness: =0
-            Height: =44
-            HoverColor: =RGBA(0, 0, 0, 0)
-            HoverFill: =RGBA(0, 0, 0, 0)
-            OnSelect: =Launch(varTouLink)
-            PressedColor: =RGBA(0, 0, 0, 0)
-            PressedFill: =RGBA(0, 0, 0, 0)
-            RadiusBottomLeft: =0
-            RadiusBottomRight: =0
-            RadiusTopLeft: =0
-            RadiusTopRight: =0
-            Text: =""
-            Width: =190
-            X: =14
-            Y: =Parent.Height - 68
   scnCalendarListUser:
     Properties:
       Fill: =RGBA(250, 250, 250, 1)
@@ -3697,7 +3709,7 @@ Screens:
         // 週の最低の縦幅（枠がない週はこの高さになる）
         Set(varWeekMinHeight, 90);
         // 週ギャラリーを収める領域の高さ（conWeeks の Height と揃える）
-        Set(varWeeksAreaHeight, 604);
+        Set(varWeeksAreaHeight, 585);
         Set(varShowPopup, false);
         // ---- 週間表示のレイアウト設定（ここを変えれば表示が変わる）----
         Set(gWeekDays, 4);           // 1画面に表示する日数
@@ -3955,6 +3967,32 @@ Screens:
             Width: =Parent.Width - 220
             X: =220
           Children:
+            - btnBuildSubChoices_LstU:
+                Control: Classic/Button@2.2.0
+                Properties:
+                  Height: =1
+                  OnSelect: |-
+                    =// 選択中の大分類に属する中分類を並べ直す（先頭は「すべて」）
+                    ClearCollect(colSubCatChoices, {CatName: "", SubName: "すべて", CatKey: "*"});
+                    Collect(
+                        colSubCatChoices,
+                        ForAll(
+                            Filter(colCategoryAll, カテゴリ in colCatSelected.CategoryName) As S,
+                            {
+                                CatName: S.カテゴリ,
+                                SubName: S.サブカテゴリ,
+                                CatKey: S.カテゴリ & "|" & S.サブカテゴリ
+                            }
+                        )
+                    );
+                    // 大分類が変わったので中分類は「すべて」に戻す
+                    Clear(colSubCatSel2);
+                    Set(varSubCatAll, true);
+                    Select(btnResizeWeeks_UserCal_LstU)
+                  Text: =""
+                  Width: =1
+                  X: =1124
+                  Y: =44
             - btnResizeWeeks_UserCal_LstU:
                 Control: Classic/Button@2.2.0
                 Properties:
@@ -3968,32 +4006,34 @@ Screens:
                         colDayHoliday,
                         ForAll(
                             colDays As D,
-                            With(
-                                {
-                                    hAll: LookUp(
-                                        colHolidays,
-                                        HolActive && HolDate = D.CellDate &&
-                                            (IsBlank(HolCat) || HolCat = varCatFilter) &&
-                                            IsBlank(HolSub)
-                                    ),
-                                    hSub: LookUp(
-                                        colHolidays,
-                                        HolActive && HolDate = D.CellDate &&
-                                            (IsBlank(HolCat) || HolCat = varCatFilter) &&
-                                            !IsBlank(HolSub) &&
-                                            HolSub in colSubCatSelected.SubCategoryName
-                                    )
-                                },
-                                {
-                                    CellDate: D.CellDate,
-                                    // 分類指定なし／大分類のみ → その日は休業日だけを表示する
-                                    TitleAll: hAll.HolTitle,
-                                    // 中分類まで指定 → 枠の先頭に休業日を足す
-                                    TitleSub: If(IsBlank(hAll.HolTitle), hSub.HolTitle, Blank()),
-                                    // その中分類の枠はチップを出さない（休業日に置き換える）
-                                    SubHidden: If(IsBlank(hAll.HolTitle), hSub.HolSub, Blank())
-                                }
-                            )
+                            {
+                                CellDate: D.CellDate,
+                                // 分類の指定が無い休業日 → その日は休業日だけを表示する
+                                TitleAll: LookUp(
+                                    colHolidays,
+                                    HolActive && HolDate = D.CellDate &&
+                                        IsBlank(HolCat) && IsBlank(HolSub)
+                                ).HolTitle
+                            }
+                        )
+                    );
+                    // 分類が指定された休業日のうち、選択中の大分類に該当するものだけを拾う
+                    // （大分類のみの指定も、中分類指定と同じ「部分的な休業」として扱う）
+                    ClearCollect(
+                        colHolidayHit,
+                        ForAll(
+                            Filter(
+                                colHolidays,
+                                HolActive,
+                                Not(IsBlank(HolCat)),
+                                HolCat in colCatSelected.CategoryName
+                            ) As Z,
+                            {
+                                CellDate: Z.HolDate,
+                                HolTitle: Z.HolTitle,
+                                HolCat: Z.HolCat,
+                                HolSub: Z.HolSub
+                            }
                         )
                     );
                     // ---- セルに並べるチップを確定させる（休業日 + 枠）----
@@ -4012,7 +4052,7 @@ Screens:
                         colDayHoliday As H,
                         If(
                             !IsBlank(H.TitleAll),
-                            // 休業日だけに置き換える
+                            // 分類の指定が無い休業日 → その日は休業日だけに置き換える
                             Collect(
                                 colCellDisplay,
                                 {
@@ -4023,13 +4063,13 @@ Screens:
                                     CloseDate: H.CellDate, IsClosed: false, IsFull: false, IsHoliday: true
                                 }
                             ),
-                            // 中分類指定の休業日は先頭に足したうえで、枠もそのまま並べる
-                            If(
-                                !IsBlank(H.TitleSub),
-                                Collect(
-                                    colCellDisplay,
+                            // 分類が指定された休業日は該当するぶんだけ先頭に積む
+                            Collect(
+                                colCellDisplay,
+                                ForAll(
+                                    Filter(colHolidayHit, CellDate = H.CellDate) As Q,
                                     {
-                                        DayId: 0, CellDate: H.CellDate, FrameName: H.TitleSub, FrameType: "",
+                                        DayId: 0, CellDate: H.CellDate, FrameName: Q.HolTitle, FrameType: "",
                                         Category: "", SubCategory: "",
                                         ColorR: 205, ColorG: 205, ColorB: 205,
                                         PublishDate: Blank(), TotalSlots: 0, FullSlots: 0, CloseDaysBefore: 0,
@@ -4041,16 +4081,27 @@ Screens:
                                 colCellDisplay,
                                 ForAll(
                                     Filter(
-                                        colCellFrames,
-                                        CellDate = H.CellDate,
-                                        !IsBlank(varCatFilter),
-                                        Category = varCatFilter,
-                                        Not(IsEmpty(colSubCatSelected)),
-                                        SubCategory in colSubCatSelected.SubCategoryName,
-                                        // 休業日で中分類まで指定された枠は表示しない
-                                        IsBlank(H.SubHidden) || SubCategory <> H.SubHidden,
+                                        colCellFrames As G,
+                                        G.CellDate = H.CellDate,
+                                        Not(IsEmpty(colCatSelected)),
+                                        G.Category in colCatSelected.CategoryName,
+                                        // 「すべて」なら有効な分類すべて、そうでなければ選ばれた分類だけ
+                                        If(
+                                            varSubCatAll,
+                                            (G.Category & "|" & G.SubCategory) in colValidKeys.CatKey,
+                                            (G.Category & "|" & G.SubCategory) in colSubCatSel2.CatKey
+                                        ),
                                         // 公開前の枠は表示しない
-                                        IsBlank(PublishDate) || PublishDate <= Now()
+                                        IsBlank(G.PublishDate) || G.PublishDate <= Now(),
+                                        // 休業日に当たる枠はチップを出さない（休業日に置き換える）
+                                        IsEmpty(
+                                            Filter(
+                                                colHolidayHit,
+                                                CellDate = H.CellDate,
+                                                HolCat = G.Category,
+                                                IsBlank(HolSub) || HolSub = G.SubCategory
+                                            )
+                                        )
                                     ) As F,
                                     {
                                         DayId: F.DayId, CellDate: F.CellDate, FrameName: F.FrameName,
@@ -4065,47 +4116,39 @@ Screens:
                             )
                         )
                     );
-                    // ---- 週の基本高さを算出（枠数に応じた必要高さ / 空の週は最低高さ）----
+                    // ---- 週ごとの高さを算出 ----
+                    // その週の中で最もチップが多い日の数と、当月の日を含むかを求める
                     ClearCollect(
                         colWeeksBase,
                         ForAll(
                             Sequence(6, 1) As W,
-                            With(
-                                {
-                                    mf: Coalesce(
-                                        Max(
-                                            ForAll(
-                                                Filter(colDays, WeekIndex = W.Value) As D,
-                                                {
-                                                    // セルに実際に表示される枠だけを数える
-                                                    // セルに実際に並ぶチップ（休業日を含む）を数える
-                                                    N: CountRows(Filter(colCellDisplay, CellDate = D.CellDate))
-                                                }
-                                            ),
-                                            N
+                            {
+                                WeekIndex: W.Value,
+                                MaxFrames: Coalesce(
+                                    Max(
+                                        ForAll(
+                                            Filter(colDays, WeekIndex = W.Value) As D,
+                                            {
+                                                // セルに実際に並ぶチップ（休業日を含む）を数える
+                                                N: CountRows(Filter(colCellDisplay, CellDate = D.CellDate))
+                                            }
                                         ),
-                                        0
-                                    )
-                                },
-                                {
-                                    WeekIndex: W.Value,
-                                    MaxFrames: mf,
-                                    // その週に当月の日が1日でも含まれるか（6週目の要否判定に使う）
-                                    HasDays: CountRows(
-                                        Filter(colDays, WeekIndex = W.Value, Month(CellDate) = Month(varMonth))
-                                    ) > 0,
-                                    BaseH: Max(varWeekMinHeight, If(mf = 0, 64, 22 + mf * 32 + 8))
-                                }
-                            )
+                                        N
+                                    ),
+                                    0
+                                ),
+                                // その週に当月の日が1日でも含まれるか（6週目の要否判定に使う）
+                                HasDays: CountRows(
+                                    Filter(colDays, WeekIndex = W.Value, Month(CellDate) = Month(varMonth))
+                                ) > 0
+                            }
                         )
                     );
-                    // ---- 親コンテナーの高さに合わせて余白を配分する ----
-                    // 表示対象の週（当月の日を含む週）だけを対象にする
-                    Set(varVisibleWeeks, CountRows(Filter(colWeeksBase, HasDays)));
-                    Set(varNeededH, Sum(Filter(colWeeksBase, HasDays), BaseH));
-                    Set(varSpareH, Max(0, varWeeksAreaHeight - varNeededH));
-                    // 枠がある週の枠数合計（比例配分の分母）
-                    Set(varTotalFrames, Sum(Filter(colWeeksBase, HasDays), MaxFrames));
+                    // 表示する週数で領域を等分したものを、各週の最低高さとする
+                    Set(varVisibleWeeks, Max(1, CountRows(Filter(colWeeksBase, HasDays))));
+                    Set(varWeekBaseH, RoundDown(varWeeksAreaHeight / varVisibleWeeks, 0));
+                    // その高さに収まるチップ数（26 は日付ラベル22px ＋ 下余白4px）
+                    Set(varFitFrames, Max(0, RoundDown((varWeekBaseH - 26) / 32, 0)));
                     ClearCollect(
                         colWeeks,
                         ForAll(
@@ -4114,22 +4157,12 @@ Screens:
                                 WeekIndex: B.WeekIndex,
                                 MaxFrames: B.MaxFrames,
                                 HasDays: B.HasDays,
-                                RowH: B.BaseH +
-                                    If(
-                                        // 非表示の週、または余白がない場合は配分しない
-                                        !B.HasDays || varSpareH <= 0,
-                                        0,
-                                        // どの週にも枠がない場合は全表示週へ均等配分
-                                        varTotalFrames = 0,
-                                        RoundDown(varSpareH / Max(varVisibleWeeks, 1), 0),
-                                        // 枠がある週にだけ、枠数に比例して配分（空の週は最低高さのまま）
-                                        B.MaxFrames = 0,
-                                        0,
-                                        RoundDown(varSpareH * B.MaxFrames / varTotalFrames, 0)
-                                    )
+                                // 収まらないチップの数だけ、テンプレートサイズ(32px)を足す
+                                RowH: varWeekBaseH + Max(0, B.MaxFrames - varFitFrames) * 32
                             }
                         )
                     );
+
 
                     // ---- 一覧表示：日にち単位の枠だけ、参加人数と上限を取り直す ----
                     ClearCollect(colListSlots, {DayId: 0, Capacity: 0, ReservedCount: 0});
@@ -4285,11 +4318,13 @@ Screens:
                   Height: =30
                   Items: =colCatRadio
                   OnSelect: |-
-                    =Set(varCatFilter, ThisItem.CategoryName);
-                    ClearCollect(colSubCatSelected, {SubCategoryName: ""});
-                    Clear(colSubCatSelected);
-                    // 絞り込みが変わったので週の高さを取り直す
-                    Select(btnResizeWeeks_UserCal_LstU);
+                    =// 大分類は複数選べる（押すたびに追加／解除）
+                    If(
+                        ThisItem.CategoryName in colCatSelected.CategoryName,
+                        RemoveIf(colCatSelected, CategoryName = ThisItem.CategoryName),
+                        Collect(colCatSelected, {CategoryName: ThisItem.CategoryName})
+                    );
+                    Select(btnBuildSubChoices_LstU)
                   ShowScrollbar: =false
                   TemplatePadding: =0
                   TemplateSize: =Self.Height
@@ -4303,13 +4338,13 @@ Screens:
                       Properties:
                         Color: |-
                           =If(
-                              ThisItem.CategoryName = varCatFilter,
+                              ThisItem.CategoryName in colCatSelected.CategoryName,
                               RGBA(0, 90, 180, 1),
                               RGBA(70, 70, 70, 1)
                           )
                         FontWeight: |-
                           =If(
-                              ThisItem.CategoryName = varCatFilter,
+                              ThisItem.CategoryName in colCatSelected.CategoryName,
                               FontWeight.Semibold,
                               FontWeight.Normal
                           )
@@ -4326,7 +4361,7 @@ Screens:
                         BorderThickness: =1
                         Fill: |-
                           =If(
-                              ThisItem.CategoryName = varCatFilter,
+                              ThisItem.CategoryName in colCatSelected.CategoryName,
                               RGBA(0, 120, 212, 1),
                               RGBA(255, 255, 255, 1)
                           )
@@ -4342,7 +4377,7 @@ Screens:
                   Height: =30
                   Size: =12
                   Text: ="中分類"
-                  Visible: =!IsBlank(varCatFilter)
+                  Visible: =Not(IsEmpty(colCatSelected))
                   Width: =70
                   X: =30
                   Y: =43
@@ -4351,32 +4386,27 @@ Screens:
                 Variant: Vertical
                 Properties:
                   Height: =30
-                  Items: |-
-                    =ForAll(
-                        Filter(colCategoryAll, カテゴリ = varCatFilter) As S,
-                        {SubCategoryName: S.サブカテゴリ}
-                    )
+                  Items: =colSubCatChoices
                   OnSelect: |-
                     =If(
-                        // 週表示のときだけ中分類の選択数を制限する（月表示では制限しない）
-                        varViewMode = "week" &&
-                            Not(ThisItem.SubCategoryName in colSubCatSelected.SubCategoryName) &&
-                            CountRows(colSubCatSelected) >= gMaxCols,
-                        Notify(
-                            "週表示で選択できる中分類は " & gMaxCols & " つまでです",
-                            NotificationType.Warning
-                        ),
+                        // 「すべて」を押したら個別のチェックはすべて外す
+                        ThisItem.CatKey = "*",
+                        Set(varSubCatAll, true);
+                        Clear(colSubCatSel2),
+                        // 個別を押したら「すべて」を外して、その項目を追加／解除する
+                        Set(varSubCatAll, false);
                         If(
-                            ThisItem.SubCategoryName in colSubCatSelected.SubCategoryName,
-                            RemoveIf(colSubCatSelected, SubCategoryName = ThisItem.SubCategoryName),
-                            Collect(colSubCatSelected, {SubCategoryName: ThisItem.SubCategoryName})
+                            ThisItem.CatKey in colSubCatSel2.CatKey,
+                            RemoveIf(colSubCatSel2, CatKey = ThisItem.CatKey),
+                            Collect(colSubCatSel2, {CatKey: ThisItem.CatKey})
                         );
-                        // 絞り込みが変わったので週の高さを取り直す
-                        Select(btnResizeWeeks_UserCal_LstU);
-                    )
+                        // 個別が全部外れたら「すべて」に戻す
+                        If(IsEmpty(colSubCatSel2), Set(varSubCatAll, true))
+                    );
+                    Select(btnResizeWeeks_UserCal_LstU)
                   TemplatePadding: =0
                   TemplateSize: =Self.Height
-                  Visible: =!IsBlank(varCatFilter)
+                  Visible: =Not(IsEmpty(colCatSelected))
                   Width: =1016
                   WrapCount: =8
                   X: =100
@@ -4387,14 +4417,19 @@ Screens:
                       Properties:
                         Color: |-
                           =If(
-                              ThisItem.SubCategoryName in colSubCatSelected.SubCategoryName,
+                              If(ThisItem.CatKey = "*", varSubCatAll, ThisItem.CatKey in colSubCatSel2.CatKey),
                               RGBA(0, 90, 180, 1),
                               RGBA(70, 70, 70, 1)
                           )
                         Height: =Parent.TemplateHeight
                         OnSelect: =Select(Parent)
                         Size: =11
-                        Text: =ThisItem.SubCategoryName
+                        Text: |-
+                          =If(
+                              ThisItem.CatKey = "*",
+                              "すべて",
+                              ThisItem.SubName
+                          )
                         Width: =88
                         X: =24
                         Y: =(Parent.TemplateHeight / 2) - (Self.Height / 2)
@@ -4405,7 +4440,7 @@ Screens:
                         BorderThickness: =1
                         Fill: |-
                           =If(
-                              ThisItem.SubCategoryName in colSubCatSelected.SubCategoryName,
+                              If(ThisItem.CatKey = "*", varSubCatAll, ThisItem.CatKey in colSubCatSel2.CatKey),
                               RGBA(0, 120, 212, 1),
                               RGBA(255, 255, 255, 1)
                           )
@@ -4683,10 +4718,8 @@ Screens:
                   Size: =14
                   Text: |-
                     =If(
-                        IsBlank(varCatFilter),
+                        IsEmpty(colCatSelected),
                         "大分類を選択してください",
-                        IsEmpty(colSubCatSelected),
-                        "中分類を選択してください",
                         "表示できる枠がありません"
                     )
                   Visible: =CountRows(galFrameList_LstU.AllItems) = 0
@@ -5320,7 +5353,11 @@ Screens:
                               Height: =499
                               Items: |-
                                 =SortByColumns(
-                                    Filter(colReservations, varResFilter = "すべて" || Status = varResFilter),
+                                    Filter(
+                                        colReservations,
+                                        // 「すべて」にキャンセルは含めない
+                                        If(varResFilter = "すべて", Status <> "キャンセル", Status = varResFilter)
+                                    ),
                                     "StartTime"
                                 )
                               OnSelect: |-
@@ -5510,7 +5547,7 @@ Screens:
                     ClearCollect(
                         colReservations,
                         ForAll(
-                            Filter(予約リスト, ResDate >= varResFrom, ResDate <= varResTo) As R,
+                            Filter(予約リスト, ResDate >= varResFrom, ResDate <= varResTo, 氏名 = gblUserInfo.氏名) As R,
                             {
                                 ID: R.ID,
                                 Title: R.Title,
@@ -5565,7 +5602,7 @@ Screens:
                   FontWeight: =FontWeight.Semibold
                   Height: =60
                   Size: =18
-                  Text: ="マイ予約"
+                  Text: ="予約一覧"
                   Width: =600
                   X: =40
             - lblResFilterGuide_UserRes:
@@ -5579,9 +5616,10 @@ Screens:
             - ddResFilter_UserRes:
                 Control: Classic/DropDown@2.3.1
                 Properties:
+                  BorderThickness: =1
                   Default: ="すべて"
                   Height: =36
-                  Items: =["すべて", "承認待ち", "予約確定", "差し戻し"]
+                  Items: =["すべて", "承認待ち", "予約確定", "差し戻し", "キャンセル"]
                   Items.Value: =Value
                   OnChange: =Set(varResFilter, Self.Selected.Value)
                   Width: =160
@@ -5702,7 +5740,7 @@ Screens:
                   Height: =35
                   Text: |-
                     =If(varResRangeMode = "future", "今日以降", Text(varResMonth, "yyyy年m月")) &
-                    " の予約：" & CountRows(colReservations) & " 件" &
+                    " の予約：" & CountRows(Filter(colReservations, Status <> "キャンセル")) & " 件" &
                     "　（承認待ち " & CountRows(Filter(colReservations, Status = "承認待ち")) & " / " &
                     "予約確定 " & CountRows(Filter(colReservations, Status = "予約確定")) & " / " &
                     "差し戻し " & CountRows(Filter(colReservations, Status = "差し戻し")) & "）" &
@@ -5975,7 +6013,7 @@ Screens:
                               !varIsAdmin && varSelEditExpired,
                               Notify(
                                   "更新期限（" & Text(varSelEditLimit, "yyyy/mm/dd") &
-                                      " まで）を過ぎているため取り消しできません",
+                                      " まで）を過ぎているためキャンセルできません",
                                   NotificationType.Warning
                               ),
                               // 押さえていた枠をすべて解放し、日枠の満枠スロット数を数え直す
@@ -5996,7 +6034,12 @@ Screens:
                               )
                           );
                           Remove(予約明細, Filter(予約明細, ResId = varSelRes.ID));
-                          Remove(予約リスト, LookUp(予約リスト, ID = varSelRes.ID));
+                          // 履歴として残すため、予約リストは消さず状態だけ変える
+                          Patch(
+                              予約リスト,
+                              LookUp(予約リスト, ID = varSelRes.ID),
+                              {Status: "キャンセル"}
+                          );
                           If(
                               !IsBlank(varRelDayId),
                               ClearCollect(colDaySlots, Filter(予約枠時間マスタ, DayId = varRelDayId));
@@ -6008,10 +6051,10 @@ Screens:
                           );
                           Select(btnAdminReload_UserRes);
                               Set(varShowResPopup, false);
-                              Notify("予約を取り消しました（枠を解放しました）", NotificationType.Success)
+                              Notify("予約をキャンセルしました（枠を解放しました）", NotificationType.Success)
                           )
                         Size: =12
-                        Text: ="取り消し"
+                        Text: ="キャンセル"
                         Visible: |-
                           =(varIsAdmin && (varSelRes.Status = "予約確定" || varSelRes.Status = "差し戻し"))
                               || (varIsOwner && varSelRes.Status = "差し戻し")
@@ -6299,8 +6342,21 @@ Screens:
                 },
                 {
                     ItemKey: "fix_name_kanji", Label: "氏名", Kind: "text",
-                    Choices: "[]", Req: true, Hint: "", Value: Coalesce(User().FullName, ""),
+                    Choices: "[]", Req: true, Hint: "", Value: gblUserInfo.氏名,
                     Remarks: "", Block: 1, SortNo: 20, Source: "fixed", FieldKey: "氏名"
+                },
+                {
+                    ItemKey: "fix_division", Label: "所属名（支店名）", Kind: "text",
+                    Choices: "[]", Req: false, Hint: "", Value: gblUserInfo.組織階層2,
+                    Remarks: "", Block: 1, SortNo: 22, Source: "fixed", FieldKey: "division"
+                },
+                {
+                    // 担当課長は App.OnStart で作った colManager（ユーザー名簿）から選ぶ
+                    // 予約リストには列を持たず、回答JSONにのみ保存する
+                    ItemKey: "fix_manager", Label: "担当課長", Kind: "select",
+                    Choices: JSON(ForAll(colManager As M, Text(M.氏名)), JSONFormat.Compact),
+                    Req: true, Hint: "", Value: "",
+                    Remarks: "", Block: 1, SortNo: 23, Source: "fixed", FieldKey: ""
                 },
                 {
                     ItemKey: "sec_kihon", Label: "基本情報", Kind: "section",
@@ -6717,7 +6773,7 @@ Screens:
                     // 中身（入力欄と備考）に応じて行ごとに自動で伸びる。
                     // 76 は最も低いセクション見出しの行に合わせた値。
                     76
-                  Width: =560
+                  Width: =1066
                   X: =40
                   Y: =230
                 Children:
@@ -6726,7 +6782,6 @@ Screens:
                       Properties:
                         BorderColor: =RGBA(0, 0, 0, 0)
                         BorderStyle: =BorderStyle.None
-                        BorderThickness: =2
                         DisabledFill: =RGBA(161, 159, 157, 1)
                         Fill: =RGBA(0, 120, 212, 1)
                         FocusedBorderThickness: =4
@@ -6778,7 +6833,7 @@ Screens:
                         HintText: =ThisItem.Hint
                         OnChange: |-
                           =Patch(colAnswers, ThisItem, {Value: Self.Text})
-                        Visible: =(ThisItem.Kind = "text" || ThisItem.Kind = "number") && Not(ThisItem.ItemKey = "fix_name_kanji" || ThisItem.ItemKey = "fix_frame" || ThisItem.ItemKey = "fix_date" || ThisItem.ItemKey = "fix_time" || ThisItem.ItemKey = "fix_editlimit" || (ThisItem.ItemKey = "fix_duration" && varEntryMode = "edit"))
+                        Visible: =(ThisItem.Kind = "text" || ThisItem.Kind = "number") && Not(ThisItem.ItemKey = "fix_name_kanji" || ThisItem.ItemKey = "fix_division" || ThisItem.ItemKey = "fix_frame" || ThisItem.ItemKey = "fix_date" || ThisItem.ItemKey = "fix_time" || ThisItem.ItemKey = "fix_editlimit" || (ThisItem.ItemKey = "fix_duration" && varEntryMode = "edit") || (ThisItem.ItemKey = "fix_manager" && varEntryMode = "edit"))
                         Width: =420
                         Y: =32
                   - txtArea_2:
@@ -6840,7 +6895,7 @@ Screens:
                                   }
                               )
                           )
-                        Visible: =ThisItem.Kind = "select" && Not(ThisItem.ItemKey = "fix_name_kanji" || ThisItem.ItemKey = "fix_frame" || ThisItem.ItemKey = "fix_date" || ThisItem.ItemKey = "fix_time" || ThisItem.ItemKey = "fix_editlimit" || (ThisItem.ItemKey = "fix_duration" && varEntryMode = "edit"))
+                        Visible: =ThisItem.Kind = "select" && Not(ThisItem.ItemKey = "fix_name_kanji" || ThisItem.ItemKey = "fix_frame" || ThisItem.ItemKey = "fix_date" || ThisItem.ItemKey = "fix_time" || ThisItem.ItemKey = "fix_editlimit" || (ThisItem.ItemKey = "fix_duration" && varEntryMode = "edit") || (ThisItem.ItemKey = "fix_manager" && varEntryMode = "edit"))
                         Width: =320
                         Y: =32
                   - dpInput_2:
@@ -6881,7 +6936,7 @@ Screens:
                         Height: =If(ThisItem.Kind = "section", 0, 40)
                         PaddingLeft: =10
                         Text: =If(IsBlank(ThisItem.Value), "（未設定）", ThisItem.Value)
-                        Visible: =(ThisItem.ItemKey = "fix_name_kanji" || ThisItem.ItemKey = "fix_frame" || ThisItem.ItemKey = "fix_date" || ThisItem.ItemKey = "fix_time" || ThisItem.ItemKey = "fix_editlimit" || (ThisItem.ItemKey = "fix_duration" && varEntryMode = "edit"))
+                        Visible: =(ThisItem.ItemKey = "fix_name_kanji" || ThisItem.ItemKey = "fix_division" || ThisItem.ItemKey = "fix_frame" || ThisItem.ItemKey = "fix_date" || ThisItem.ItemKey = "fix_time" || ThisItem.ItemKey = "fix_editlimit" || (ThisItem.ItemKey = "fix_duration" && varEntryMode = "edit") || (ThisItem.ItemKey = "fix_manager" && varEntryMode = "edit"))
                         Width: =440
                         Y: =32
                   - lblRemarks_2:
@@ -6916,7 +6971,7 @@ Screens:
                 Control: Label@2.5.1
                 Properties:
                   Color: =RGBA(180, 40, 40, 1)
-                  Height: =26
+                  Height: =30
                   Size: =11
                   Text: |-
                     =If(
@@ -6925,7 +6980,7 @@ Screens:
                             Concat(Filter(colAnswers, Req, Kind <> "section", IsBlank(Value)), Label, " / "),
                         ""
                     )
-                  Width: =560
+                  Width: =1058
                   X: =40
                   Y: =676
             - btnTempReserve_1:
@@ -6959,7 +7014,7 @@ Screens:
                     )
                   Text: =If(varEntryMode = "edit", "この内容で更新する", "この内容で仮予約する")
                   Width: =300
-                  X: =40
+                  X: =333
                   Y: =706
             - btnEntryCancel:
                 Control: Classic/Button@2.2.0
@@ -6969,42 +7024,8 @@ Screens:
                     =Set(varEntryMode, "new");
                     Back()
                   Text: ="キャンセル"
-                  X: =360
+                  X: =653
                   Y: =706
-            - lblJsonTitle_2:
-                Control: Label@2.5.1
-                Properties:
-                  FontWeight: =FontWeight.Semibold
-                  Height: =28
-                  Text: ="保存される回答JSON（プレビュー）"
-                  Width: =486
-                  X: =620
-                  Y: =200
-            - lblJsonPreview_2:
-                Control: Label@2.5.1
-                Properties:
-                  Fill: =RGBA(245, 245, 245, 1)
-                  Font: =Font.'Courier New'
-                  Height: =524
-                  PaddingLeft: =10
-                  PaddingTop: =10
-                  Size: =10
-                  Text: |-
-                    =If(
-                        IsEmpty(colAnswers),
-                        "この枠にはパターンが設定されていないか、項目が0件です",
-                        JSON(
-                            ShowColumns(
-                                SortByColumns(colAnswers, "Block", "SortNo"),
-                                ItemKey, Label, Kind, Choices, Req, Hint, Remarks, Value, Block, SortNo, Source, FieldKey
-                            ),
-                            JSONFormat.IndentFour
-                        )
-                    )
-                  VerticalAlign: =VerticalAlign.Top
-                  Width: =486
-                  X: =620
-                  Y: =230
             - btnBuildHold:
                 Control: Classic/Button@2.2.0
                 Properties:
@@ -7143,6 +7164,14 @@ Screens:
                                             Text(varPopupDate, "yyyy/mm/dd") & " " &
                                             Text(varSelectedStart, "HH:mm"),
                                         Status: "承認待ち",
+                                        // 予約者の所属情報（App.OnStart で取得した gblUserInfo から）
+                                        社員番号: gblUserInfo.社員番号,
+                                        役職: gblUserInfo.役職,
+                                        組織階層0: gblUserInfo.組織階層0,
+                                        組織階層1: gblUserInfo.組織階層1,
+                                        組織階層2: gblUserInfo.組織階層2,
+                                        組織階層3: gblUserInfo.組織階層3,
+                                        メールアドレス: gblUserInfo.メールアドレス,
                                         氏名: LookUp(colAnswers, ItemKey = "fix_name_kanji", Value),
                                         HeadCount: hc,
                                         回答JSON: JSON(
@@ -7273,7 +7302,7 @@ Screens:
                             FirstN(
                                 Sort(
                                     Sort(
-                                        Filter(予約リスト, 氏名 = User().FullName),
+                                        Filter(予約リスト, 氏名 = User().FullName, Status <> "キャンセル"),
                                         StartTime,
                                         SortOrder.Descending
                                     ),
@@ -7298,8 +7327,8 @@ Screens:
                   Text: ="過去の予約から引用"
                   Visible: =varEntryMode = "new"
                   Width: =170
-                  X: =430
-                  Y: =196
+                  X: =928
+                  Y: =200
             - recHistOverlay:
                 Control: Rectangle@2.3.0
                 Properties:
