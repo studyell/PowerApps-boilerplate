@@ -10224,9 +10224,6 @@ Screens:
       OnVisible: |-
         =Set(varShowResPopup, false);
         Set(varResFilter, "すべて");
-        Set(varIsAdmin, true);
-        // PoC: 予約者本人かどうかの判定は未実装（後日差し替え）
-        Set(varIsOwner, true);
         Set(varShowRejectPopup, false);
         // 期間モード: "future" = 今日以降 / "month" = 指定年月
         Set(varResRangeMode, "future");
@@ -11296,7 +11293,7 @@ Screens:
                           Notify("予約を確定しました", NotificationType.Success)
                         Size: =12
                         Text: ="予約確定にする"
-                        Visible: =varIsAdmin && (varSelRes.Status = "承認待ち" || varSelRes.Status = "差し戻し")
+                        Visible: =varSelRes.Status = "承認待ち" || varSelRes.Status = "再承認待ち"
                         Width: =150
                         X: =20
                         Y: =602
@@ -11320,7 +11317,7 @@ Screens:
                           )
                         Size: =12
                         Text: ="差し戻す"
-                        Visible: =varIsAdmin && varSelRes.Status = "予約確定"
+                        Visible: =varSelRes.Status = "予約確定"
                         Width: =150
                         X: =180
                         Y: =602
@@ -11332,22 +11329,12 @@ Screens:
                         Fill: =RGBA(0, 120, 212, 1)
                         Height: =46
                         OnSelect: |-
-                          =If(
-                              !varIsAdmin && varSelEditExpired,
-                              Notify(
-                                  "更新期限（" & Text(varSelEditLimit, "yyyy/mm/dd") &
-                                      " まで）を過ぎているため変更できません",
-                                  NotificationType.Warning
-                              ),
-                              Set(varEntryMode, "edit");
-                              Set(varShowResPopup, false);
-                              Navigate(scnReserveEntryUser, ScreenTransition.Cover)
-                          )
+                          =Set(varEntryMode, "edit");
+                          Set(varShowResPopup, false);
+                          Navigate(scnReserveEntryUser, ScreenTransition.Cover)
                         Size: =12
                         Text: ="内容を編集する"
-                        Visible: |-
-                          =(varIsAdmin && (varSelRes.Status = "予約確定" || varSelRes.Status = "差し戻し"))
-                              || (varIsOwner && varSelRes.Status = "差し戻し")
+                        Visible: =varSelRes.Status = "予約確定" || varSelRes.Status = "差し戻し"
                         Width: =150
                         X: =340
                         Y: =602
@@ -11358,14 +11345,7 @@ Screens:
                         Color: =RGBA(180, 40, 40, 1)
                         Height: =46
                         OnSelect: |-
-                          =If(
-                              !varIsAdmin && varSelEditExpired,
-                              Notify(
-                                  "更新期限（" & Text(varSelEditLimit, "yyyy/mm/dd") &
-                                      " まで）を過ぎているため取り消しできません",
-                                  NotificationType.Warning
-                              ),
-                              // 押さえていた枠をすべて解放し、日枠の満枠スロット数を数え直す
+                          =// 押さえていた枠をすべて解放し、日枠の満枠スロット数を数え直す
                           // ForAll の中では Set が使えないため、先に日枠のIDを取得しておく
                           Set(varRelDayId, First(Filter(予約明細, ResId = varSelRes.ID)).DayId);
                           ForAll(
@@ -11399,14 +11379,11 @@ Screens:
                               )
                           );
                           Select(btnAdminReload);
-                              Set(varShowResPopup, false);
-                              Notify("予約を取り消ししました（枠を解放しました）", NotificationType.Success)
-                          )
+                          Set(varShowResPopup, false);
+                          Notify("予約を取り消ししました（枠を解放しました）", NotificationType.Success)
                         Size: =12
                         Text: ="取り消し"
-                        Visible: |-
-                          =(varIsAdmin && (varSelRes.Status = "予約確定" || varSelRes.Status = "差し戻し"))
-                              || (varIsOwner && varSelRes.Status = "差し戻し")
+                        Visible: =varSelRes.Status = "予約確定" || varSelRes.Status = "差し戻し"
                         Width: =110
                         X: =500
                         Y: =602

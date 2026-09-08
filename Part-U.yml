@@ -5002,10 +5002,6 @@ Screens:
       OnVisible: |-
         =Set(varShowResPopup, false);
         Set(varResFilter, "すべて");
-        Set(varIsAdmin, false);
-        // PoC: 予約者本人かどうかの判定は未実装（後日差し替え）
-        Set(varIsOwner, true);
-        Set(varShowRejectPopup, false);
         // 期間モード: "future" = 今日以降 / "month" = 指定年月
         Set(varResRangeMode, "future");
         Set(varResMonth, Date(Year(Today()), Month(Today()), 1));
@@ -5622,7 +5618,7 @@ Screens:
                   BorderThickness: =1
                   Default: ="すべて"
                   Height: =36
-                  Items: =["すべて", "承認待ち", "予約確定", "差し戻し", "取り消し"]
+                  Items: =["すべて", "承認待ち", "再承認待ち", "予約確定", "差し戻し", "取り消し"]
                   Items.Value: =Value
                   OnChange: =Set(varResFilter, Self.Selected.Value)
                   Width: =160
@@ -5936,48 +5932,6 @@ Screens:
                         Width: =680
                         X: =20
                         Y: =552
-                  - btnApproveOne_My:
-                      Control: Classic/Button@2.2.0
-                      Properties:
-                        BorderThickness: =0
-                        Color: =RGBA(255, 255, 255, 1)
-                        Fill: =RGBA(124, 195, 96, 1)
-                        Height: =46
-                        OnSelect: |-
-                          =Patch(予約リスト, LookUp(予約リスト, ID = varSelRes.ID), {Status: "予約確定"});
-                          Select(btnAdminReload_UserRes);
-                          Set(varSelRes, LookUp(colReservations, ID = varSelRes.ID));
-                          Notify("予約を確定しました", NotificationType.Success)
-                        Size: =12
-                        Text: ="予約確定にする"
-                        Visible: =varIsAdmin && (varSelRes.Status = "承認待ち" || varSelRes.Status = "差し戻し")
-                        Width: =150
-                        X: =20
-                        Y: =602
-                  - btnRejectRes_My:
-                      Control: Classic/Button@2.2.0
-                      Properties:
-                        BorderThickness: =0
-                        Color: =RGBA(255, 255, 255, 1)
-                        Fill: =RGBA(232, 62, 140, 1)
-                        Height: =46
-                        OnSelect: |-
-                          =If(
-                              varSelEditExpired,
-                              Notify(
-                                  "更新期限（" & Text(varSelEditLimit, "yyyy/mm/dd") &
-                                      " まで）を過ぎているため差し戻しできません。内容の修正は編集から行ってください",
-                                  NotificationType.Warning
-                              ),
-                              Reset(txtRejectReason_My);
-                              Set(varShowRejectPopup, true)
-                          )
-                        Size: =12
-                        Text: ="差し戻す"
-                        Visible: =varIsAdmin && varSelRes.Status = "予約確定"
-                        Width: =150
-                        X: =180
-                        Y: =602
                   - btnEditRes_My:
                       Control: Classic/Button@2.2.0
                       Properties:
@@ -5987,7 +5941,7 @@ Screens:
                         Height: =46
                         OnSelect: |-
                           =If(
-                              !varIsAdmin && varSelEditExpired,
+                              varSelEditExpired,
                               Notify(
                                   "更新期限（" & Text(varSelEditLimit, "yyyy/mm/dd") &
                                       " まで）を過ぎているため変更できません",
@@ -6000,8 +5954,9 @@ Screens:
                         Size: =12
                         Text: ="内容を編集する"
                         Visible: |-
-                          =(varIsAdmin && (varSelRes.Status = "予約確定" || varSelRes.Status = "差し戻し"))
-                              || (varIsOwner && varSelRes.Status = "差し戻し")
+                          =(varSelRes.Status = "予約確定" || varSelRes.Status = "差し戻し") &&
+                              // 更新期限を過ぎたら編集できない
+                              !varSelEditExpired
                         Width: =150
                         X: =340
                         Y: =602
@@ -6013,7 +5968,7 @@ Screens:
                         Height: =46
                         OnSelect: |-
                           =If(
-                              !varIsAdmin && varSelEditExpired,
+                              varSelEditExpired,
                               Notify(
                                   "更新期限（" & Text(varSelEditLimit, "yyyy/mm/dd") &
                                       " まで）を過ぎているため取り消しできません",
@@ -6058,9 +6013,7 @@ Screens:
                           )
                         Size: =12
                         Text: ="取り消し"
-                        Visible: |-
-                          =(varIsAdmin && (varSelRes.Status = "予約確定" || varSelRes.Status = "差し戻し"))
-                              || (varIsOwner && varSelRes.Status = "差し戻し")
+                        Visible: =varSelRes.Status = "予約確定" || varSelRes.Status = "差し戻し"
                         Width: =110
                         X: =500
                         Y: =602
@@ -6074,109 +6027,6 @@ Screens:
                         Width: =80
                         X: =620
                         Y: =602
-            - recRejectOverlay_UserRes:
-                Control: Rectangle@2.3.0
-                Properties:
-                  Fill: =RGBA(0, 0, 0, 0.4)
-                  Height: =Parent.Height
-                  OnSelect: =Set(varShowRejectPopup, false)
-                  Visible: =varShowRejectPopup
-                  Width: =Parent.Width
-            - conRejectPopup_UserRes:
-                Control: GroupContainer@1.5.0
-                Variant: ManualLayout
-                Properties:
-                  DropShadow: =DropShadow.Bold
-                  Fill: =RGBA(255, 255, 255, 1)
-                  Height: =300
-                  Visible: =varShowRejectPopup
-                  Width: =520
-                  X: =(Parent.Width - 520) / 2
-                  Y: =180
-                Children:
-                  - recRejectHead_My:
-                      Control: Rectangle@2.3.0
-                      Properties:
-                        Fill: =RGBA(232, 62, 140, 1)
-                        Height: =46
-                        Width: =520
-                  - lblRejectTitle_My:
-                      Control: Label@2.5.1
-                      Properties:
-                        Color: =RGBA(255, 255, 255, 1)
-                        FontWeight: =FontWeight.Semibold
-                        Height: =46
-                        Size: =14
-                        Text: ="予約を差し戻す"
-                        Width: =420
-                        X: =16
-                  - btnRejectClose_My:
-                      Control: Classic/Button@2.2.0
-                      Properties:
-                        BorderThickness: =0
-                        Color: =RGBA(255, 255, 255, 1)
-                        Fill: =RGBA(0, 0, 0, 0)
-                        Height: =34
-                        OnSelect: =Set(varShowRejectPopup, false)
-                        Text: ="✕"
-                        Width: =36
-                        X: =472
-                        Y: =6
-                  - lblRejectGuide_My:
-                      Control: Label@2.5.1
-                      Properties:
-                        Height: =28
-                        Size: =12
-                        Text: ="差し戻し理由（予約者に表示されます）"
-                        Width: =472
-                        X: =24
-                        Y: =64
-                  - btnRejectConfirm_My:
-                      Control: Classic/Button@2.2.0
-                      Properties:
-                        BorderThickness: =0
-                        Color: =RGBA(255, 255, 255, 1)
-                        Fill: =RGBA(232, 62, 140, 1)
-                        Height: =46
-                        OnSelect: |-
-                          =If(
-                              IsBlank(Trim(txtRejectReason_My.Text)),
-                              Notify("差し戻し理由を入力してください", NotificationType.Error),
-                              Patch(
-                                  予約リスト,
-                                  LookUp(予約リスト, ID = varSelRes.ID),
-                                  {Status: "差し戻し", RejectReason: Trim(txtRejectReason_My.Text)}
-                              );
-                              Select(btnAdminReload_UserRes);
-                              Set(varSelRes, LookUp(colReservations, ID = varSelRes.ID));
-                              Set(varShowRejectPopup, false);
-                              Notify("予約を差し戻しました", NotificationType.Success)
-                          )
-                        Size: =13
-                        Text: ="この理由で差し戻す"
-                        Width: =200
-                        X: =24
-                        Y: =218
-                  - btnRejectCancel_My:
-                      Control: Classic/Button@2.2.0
-                      Properties:
-                        Height: =46
-                        OnSelect: =Set(varShowRejectPopup, false)
-                        Size: =13
-                        Text: ="キャンセル"
-                        Width: =140
-                        X: =244
-                        Y: =218
-                  - txtRejectReason_My:
-                      Control: Classic/TextInput@2.3.2
-                      Properties:
-                        Default: =""
-                        Height: =100
-                        HintText: ="例：利用目的の記載が不足しています。追記のうえ再申請してください。"
-                        Mode: =TextMode.MultiLine
-                        Width: =472
-                        X: =24
-                        Y: =96
   scnReserveEntryUser:
     Properties:
       Fill: =RGBA(245, 247, 250, 1)
@@ -6188,7 +6038,7 @@ Screens:
         Set(varSelHistId, Blank());
         Set(
             varAnswerColumns,
-            "ItemKey,Label,Kind,Choices,Req,Hint,Remarks,Value,Block,SortNo,Source,FieldKey"
+            "ItemKey,Label,Kind,Choices,Req,Hint,Remarks,Value,Block,SortNo,Source,FieldKey,Edited,OrigValue"
         );
         // ---------- 連続枠：その日の枠と、選べる利用時間を組み立てる ----------
         // 編集時は自分がすでに押さえているぶんを空きとして扱う
@@ -6328,7 +6178,10 @@ Screens:
                         Block: Coalesce(Value(J.Value.Block), 2),
                         SortNo: Coalesce(Value(J.Value.SortNo), 0),
                         Source: Coalesce(Text(J.Value.Source), "pattern"),
-                        FieldKey: Text(J.Value.FieldKey)
+                        FieldKey: Text(J.Value.FieldKey),
+                        // 編集チェックの状態と、チェックを外したときに戻す値
+                        Edited: false,
+                        OrigValue: Text(J.Value.Value)
                     }
                 )
             );
@@ -6341,17 +6194,17 @@ Screens:
                 {
                     ItemKey: "sec_yoyakusha", Label: "予約者情報", Kind: "section",
                     Choices: "[]", Req: false, Hint: "", Value: "",
-                    Remarks: "", Block: 1, SortNo: 10, Source: "fixed", FieldKey: ""
+                    Remarks: "", Block: 1, SortNo: 10, Source: "fixed", Edited: false, OrigValue: "", FieldKey: ""
                 },
                 {
                     ItemKey: "fix_name_kanji", Label: "氏名", Kind: "text",
                     Choices: "[]", Req: true, Hint: "", Value: gblUserInfo.氏名,
-                    Remarks: "", Block: 1, SortNo: 20, Source: "fixed", FieldKey: "氏名"
+                    Remarks: "", Block: 1, SortNo: 20, Source: "fixed", Edited: false, OrigValue: "", FieldKey: "氏名"
                 },
                 {
                     ItemKey: "fix_division", Label: "所属名（支店名）", Kind: "text",
                     Choices: "[]", Req: false, Hint: "", Value: gblUserInfo.組織階層2,
-                    Remarks: "", Block: 1, SortNo: 22, Source: "fixed", FieldKey: "division"
+                    Remarks: "", Block: 1, SortNo: 22, Source: "fixed", Edited: false, OrigValue: "", FieldKey: "division"
                 },
                 {
                     // 担当課長は App.OnStart で作った colManager（ユーザー名簿）から選ぶ
@@ -6359,17 +6212,17 @@ Screens:
                     ItemKey: "fix_manager", Label: "担当課長", Kind: "select",
                     Choices: "[" & Concat(colManager, Char(34) & 氏名 & Char(34), ",") & "]",
                     Req: true, Hint: "", Value: "",
-                    Remarks: "", Block: 1, SortNo: 23, Source: "fixed", FieldKey: ""
+                    Remarks: "", Block: 1, SortNo: 23, Source: "fixed", Edited: false, OrigValue: "", FieldKey: ""
                 },
                 {
                     ItemKey: "sec_kihon", Label: "基本情報", Kind: "section",
                     Choices: "[]", Req: false, Hint: "", Value: "",
-                    Remarks: "", Block: 1, SortNo: 50, Source: "fixed", FieldKey: ""
+                    Remarks: "", Block: 1, SortNo: 50, Source: "fixed", Edited: false, OrigValue: "", FieldKey: ""
                 },
                 {
                     ItemKey: "fix_frame", Label: "予約枠名", Kind: "text",
                     Choices: "[]", Req: false, Hint: "", Value: varPopupFrame,
-                    Remarks: "", Block: 1, SortNo: 60, Source: "fixed", FieldKey: "FrameName"
+                    Remarks: "", Block: 1, SortNo: 60, Source: "fixed", Edited: false, OrigValue: "", FieldKey: "FrameName"
                 },
                 {
                     ItemKey: "fix_date", Label: "利用日", Kind: "text",
@@ -6378,14 +6231,14 @@ Screens:
                         Switch(Weekday(varPopupDate),
                             1, "日", 2, "月", 3, "火", 4, "水", 5, "木", 6, "金", 7, "土"
                         ) & ")",
-                    Remarks: "", Block: 1, SortNo: 70, Source: "fixed", FieldKey: ""
+                    Remarks: "", Block: 1, SortNo: 70, Source: "fixed", Edited: false, OrigValue: "", FieldKey: ""
                 },
                 {
                     ItemKey: "fix_time", Label: "利用開始時間", Kind: "text",
                     Choices: "[]", Req: false, Hint: "",
                     Value: Text(varSelectedStart, "HH:mm") & " ～ " & Text(varSelectedEnd, "HH:mm") &
                         "（" & varDurMin & "分）",
-                    Remarks: "", Block: 1, SortNo: 80, Source: "fixed", FieldKey: ""
+                    Remarks: "", Block: 1, SortNo: 80, Source: "fixed", Edited: false, OrigValue: "", FieldKey: ""
                 },
                 {
                     ItemKey: "fix_editlimit",
@@ -6408,7 +6261,7 @@ Screens:
                 {
                     ItemKey: "fix_headcount", Label: "ご利用人数", Kind: "number",
                     Choices: "[]", Req: true, Hint: "半角数字で入力してください", Value: "",
-                    Remarks: "", Block: 1, SortNo: 90, Source: "fixed", FieldKey: "HeadCount"
+                    Remarks: "", Block: 1, SortNo: 90, Source: "fixed", Edited: false, OrigValue: "", FieldKey: "HeadCount"
                 }
             );
             // (2) パターン項目（Block = 2 / パターン管理で決めた順）
@@ -6428,6 +6281,8 @@ Screens:
                         Value: "",
                         Block: 2,
                         Source: "pattern",
+                        Edited: false,
+                        OrigValue: "",
                         FieldKey: ""
                     }
                 )
@@ -6445,7 +6300,7 @@ Screens:
                             ItemKey: p.ItemKey, Label: p.Label, Kind: p.Kind,
                             Choices: p.Choices, Req: p.Req, Hint: p.Hint,
                             Remarks: p.Remarks, Value: p.Value,
-                            Block: 2, SortNo: S.Value * 10, Source: "pattern", FieldKey: ""
+                            Block: 2, SortNo: S.Value * 10, Source: "pattern", Edited: false, OrigValue: "", FieldKey: ""
                         }
                     )
                 )
@@ -6780,6 +6635,25 @@ Screens:
                   X: =40
                   Y: =230
                 Children:
+                  - chkEditMark_2:
+                      Control: Classic/CheckBox@2.1.0
+                      Properties:
+                        CheckboxSize: =18
+                        Default: =ThisItem.Edited
+                        Height: =28
+                        OnCheck: |-
+                          =Patch(colAnswers, ThisItem, {Edited: true})
+                        OnUncheck: |-
+                          =// チェックを外したら値を元に戻す
+                          Patch(colAnswers, ThisItem, {Edited: false, Value: ThisItem.OrigValue})
+                        Size: =11
+                        Text: =""
+                        Visible: |-
+                          =varEntryMode = "edit" && ThisItem.Kind <> "section" &&
+                              Not(ThisItem.ItemKey = "fix_name_kanji" || ThisItem.ItemKey = "fix_division" || ThisItem.ItemKey = "fix_frame" || ThisItem.ItemKey = "fix_date" || ThisItem.ItemKey = "fix_time" || ThisItem.ItemKey = "fix_editlimit" || ThisItem.ItemKey = "fix_duration" || ThisItem.ItemKey = "fix_manager")
+                        Width: =24
+                        X: =0
+                        Y: =2
                   - recSectionDeco_2:
                       Control: Rectangle@2.3.0
                       Properties:
@@ -6817,13 +6691,20 @@ Screens:
                         Size: =12
                         Text: =ThisItem.Label & If(ThisItem.Req, " *", "")
                         Visible: =ThisItem.Kind <> "section"
-                        Width: =Parent.TemplateWidth
+                        Width: =Parent.TemplateWidth - Self.X
+                        X: =If(varEntryMode = "edit" && ThisItem.Kind <> "section", 24, 0)
                         Y: =2
                   - txtInput_2:
                       Control: Classic/TextInput@2.3.2
                       Properties:
                         BorderThickness: =1
                         Default: =ThisItem.Value
+                        DisplayMode: |-
+                          =If(
+                              varEntryMode <> "edit",
+                              DisplayMode.Edit,
+                              If(ThisItem.Edited, DisplayMode.Edit, DisplayMode.View)
+                          )
                         FocusedBorderThickness: =2
                         Format: |-
                           =If(
@@ -6838,12 +6719,19 @@ Screens:
                           =Patch(colAnswers, ThisItem, {Value: Self.Text})
                         Visible: =(ThisItem.Kind = "text" || ThisItem.Kind = "number") && Not(ThisItem.ItemKey = "fix_name_kanji" || ThisItem.ItemKey = "fix_division" || ThisItem.ItemKey = "fix_frame" || ThisItem.ItemKey = "fix_date" || ThisItem.ItemKey = "fix_time" || ThisItem.ItemKey = "fix_editlimit" || (ThisItem.ItemKey = "fix_duration" && varEntryMode = "edit") || (ThisItem.ItemKey = "fix_manager" && varEntryMode = "edit"))
                         Width: =420
+                        X: =If(varEntryMode = "edit" && ThisItem.Kind <> "section", 24, 0)
                         Y: =32
                   - txtArea_2:
                       Control: Classic/TextInput@2.3.2
                       Properties:
                         BorderThickness: =1
                         Default: =ThisItem.Value
+                        DisplayMode: |-
+                          =If(
+                              varEntryMode <> "edit",
+                              DisplayMode.Edit,
+                              If(ThisItem.Edited, DisplayMode.Edit, DisplayMode.View)
+                          )
                         FocusedBorderThickness: =2
                         Height: =If(ThisItem.Kind = "textarea", 56, 0)
                         HintText: =ThisItem.Hint
@@ -6852,11 +6740,18 @@ Screens:
                           =Patch(colAnswers, ThisItem, {Value: Self.Text})
                         Visible: =ThisItem.Kind = "textarea"
                         Width: =520
+                        X: =If(varEntryMode = "edit" && ThisItem.Kind <> "section", 24, 0)
                         Y: =32
                   - rdoInput_2:
                       Control: Classic/Radio@2.3.0
                       Properties:
                         Default: =ThisItem.Value
+                        DisplayMode: |-
+                          =If(
+                              varEntryMode <> "edit",
+                              DisplayMode.Edit,
+                              If(ThisItem.Edited, DisplayMode.Edit, DisplayMode.View)
+                          )
                         FocusedBorderThickness: =0
                         Height: =If(ThisItem.Kind = "radio", 44, 0)
                         Items: =ForAll(Table(ParseJSON(Coalesce(ThisItem.Choices, "[]"))), Text(ThisRecord.Value))
@@ -6868,6 +6763,7 @@ Screens:
                         Size: =12
                         Visible: =ThisItem.Kind = "radio"
                         Width: =420
+                        X: =If(varEntryMode = "edit" && ThisItem.Kind <> "section", 24, 0)
                         Y: =32
                   - ddInput_2:
                       Control: Classic/DropDown@2.3.1
@@ -6875,6 +6771,12 @@ Screens:
                         AllowEmptySelection: =true
                         BorderThickness: =1
                         Default: =ThisItem.Value
+                        DisplayMode: |-
+                          =If(
+                              varEntryMode <> "edit",
+                              DisplayMode.Edit,
+                              If(ThisItem.Edited, DisplayMode.Edit, DisplayMode.View)
+                          )
                         FocusedBorderThickness: =2
                         Height: =If(ThisItem.Kind = "select", 40, 0)
                         Items: =ForAll(Table(ParseJSON(Coalesce(ThisItem.Choices, "[]"))), Text(ThisRecord.Value))
@@ -6900,6 +6802,7 @@ Screens:
                           )
                         Visible: =ThisItem.Kind = "select" && Not(ThisItem.ItemKey = "fix_name_kanji" || ThisItem.ItemKey = "fix_frame" || ThisItem.ItemKey = "fix_date" || ThisItem.ItemKey = "fix_time" || ThisItem.ItemKey = "fix_editlimit" || (ThisItem.ItemKey = "fix_duration" && varEntryMode = "edit") || (ThisItem.ItemKey = "fix_manager" && varEntryMode = "edit"))
                         Width: =320
+                        X: =If(varEntryMode = "edit" && ThisItem.Kind <> "section", 24, 0)
                         Y: =32
                   - dpInput_2:
                       Control: Classic/DatePicker@2.6.0
@@ -6911,17 +6814,30 @@ Screens:
                               DateValue(ThisItem.Value),
                               Blank()
                           )
+                        DisplayMode: |-
+                          =If(
+                              varEntryMode <> "edit",
+                              DisplayMode.Edit,
+                              If(ThisItem.Edited, DisplayMode.Edit, DisplayMode.View)
+                          )
                         FocusedBorderThickness: =2
                         Height: =If(ThisItem.Kind = "date", 40, 0)
                         OnChange: |-
                           =Patch(colAnswers, ThisItem, {Value: Text(Self.SelectedDate, "yyyy-mm-dd")})
                         Visible: =ThisItem.Kind = "date"
                         Width: =320
+                        X: =If(varEntryMode = "edit" && ThisItem.Kind <> "section", 24, 0)
                         Y: =32
                   - chkInput_2:
                       Control: Classic/CheckBox@2.1.0
                       Properties:
                         Default: =ThisItem.Value = "はい"
+                        DisplayMode: |-
+                          =If(
+                              varEntryMode <> "edit",
+                              DisplayMode.Edit,
+                              If(ThisItem.Edited, DisplayMode.Edit, DisplayMode.View)
+                          )
                         Height: =If(ThisItem.Kind = "checkbox", 40, 0)
                         OnCheck: |-
                           =Patch(colAnswers, ThisItem, {Value: "はい"})
@@ -6930,6 +6846,7 @@ Screens:
                         Text: ="はい"
                         Visible: =ThisItem.Kind = "checkbox"
                         Width: =200
+                        X: =If(varEntryMode = "edit" && ThisItem.Kind <> "section", 24, 0)
                         Y: =32
                   - lblLockedValue:
                       Control: Label@2.5.1
@@ -6941,6 +6858,7 @@ Screens:
                         Text: =If(IsBlank(ThisItem.Value), "（未設定）", ThisItem.Value)
                         Visible: =(ThisItem.ItemKey = "fix_name_kanji" || ThisItem.ItemKey = "fix_division" || ThisItem.ItemKey = "fix_frame" || ThisItem.ItemKey = "fix_date" || ThisItem.ItemKey = "fix_time" || ThisItem.ItemKey = "fix_editlimit" || (ThisItem.ItemKey = "fix_duration" && varEntryMode = "edit") || (ThisItem.ItemKey = "fix_manager" && varEntryMode = "edit"))
                         Width: =440
+                        X: =If(varEntryMode = "edit" && ThisItem.Kind <> "section", 24, 0)
                         Y: =32
                   - lblRemarks_2:
                       Control: Label@2.5.1
@@ -6964,6 +6882,7 @@ Screens:
                           )
                         Visible: =ThisItem.Kind <> "section" && !IsBlank(ThisItem.Remarks)
                         Width: =520
+                        X: =If(varEntryMode = "edit" && ThisItem.Kind <> "section", 24, 0)
                         Y: |-
                           =If(
                               ThisItem.Kind = "section" || IsBlank(ThisItem.Remarks),
@@ -6994,6 +6913,10 @@ Screens:
                   DisplayMode: |-
                     =If(
                         IsBlank(varPopupFrame) || IsBlank(varSelectedStart),
+                        DisplayMode.Disabled,
+                        // 編集時は、実際に値が変わった項目が1つも無ければ保存させない
+                        varEntryMode = "edit" &&
+                            CountRows(Filter(colAnswers, Edited, Value <> OrigValue)) = 0,
                         DisplayMode.Disabled,
                         DisplayMode.Edit
                     )
@@ -7138,14 +7061,29 @@ Screens:
                                         氏名: LookUp(colAnswers, ItemKey = "fix_name_kanji", Value),
                                         HeadCount: hc,
                                         回答JSON: JSON(
-                                            ShowColumns(
-                                                colAnswers,
-                                                ItemKey, Label, Kind, Choices, Req, Hint, Remarks, Value, Block, SortNo, Source, FieldKey
+                                            ForAll(
+                                                colAnswers As A,
+                                                {
+                                                    ItemKey: A.ItemKey,
+                                                    Label: A.Label,
+                                                    Kind: A.Kind,
+                                                    Choices: A.Choices,
+                                                    Req: A.Req,
+                                                    Hint: A.Hint,
+                                                    Remarks: A.Remarks,
+                                                    Value: A.Value,
+                                                    Block: A.Block,
+                                                    SortNo: A.SortNo,
+                                                    Source: A.Source,
+                                                    FieldKey: A.FieldKey,
+                                                    // チェックを入れたうえで値が変わった項目だけ印を付ける
+                                                    edited: A.Edited && A.Value <> A.OrigValue
+                                                }
                                             ),
                                             JSONFormat.IndentFour
                                         ),
-                                        // 差し戻しからの再申請は「承認待ち」に戻す
-                                        Status: If(varSelRes.Status = "差し戻し", "承認待ち", varSelRes.Status)
+                                        // 編集して再申請するので「再承認待ち」にする
+                                        Status: "再承認待ち"
                                     }
                                 ),
                                 Patch(
@@ -7178,9 +7116,23 @@ Screens:
                                         氏名: LookUp(colAnswers, ItemKey = "fix_name_kanji", Value),
                                         HeadCount: hc,
                                         回答JSON: JSON(
-                                            ShowColumns(
-                                                colAnswers,
-                                                ItemKey, Label, Kind, Choices, Req, Hint, Remarks, Value, Block, SortNo, Source, FieldKey
+                                            ForAll(
+                                                colAnswers As A,
+                                                {
+                                                    ItemKey: A.ItemKey,
+                                                    Label: A.Label,
+                                                    Kind: A.Kind,
+                                                    Choices: A.Choices,
+                                                    Req: A.Req,
+                                                    Hint: A.Hint,
+                                                    Remarks: A.Remarks,
+                                                    Value: A.Value,
+                                                    Block: A.Block,
+                                                    SortNo: A.SortNo,
+                                                    Source: A.Source,
+                                                    FieldKey: A.FieldKey,
+                                                    edited: false
+                                                }
                                             ),
                                             JSONFormat.IndentFour
                                         )
