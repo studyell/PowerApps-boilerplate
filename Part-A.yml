@@ -10652,7 +10652,9 @@ Screens:
                                             Kind: Text(J.Value.Kind),
                                             Value: Text(J.Value.Value),
                                             Block: Coalesce(Value(J.Value.Block), 2),
-                                            SortNo: Coalesce(Value(J.Value.SortNo), 0)
+                                            SortNo: Coalesce(Value(J.Value.SortNo), 0),
+                                            // 利用者が編集した項目に印を付ける
+                                            Edited: Coalesce(Boolean(J.Value.edited), false)
                                         }
                                     )
                                 );
@@ -11232,7 +11234,14 @@ Screens:
                             Properties:
                               BorderColor: =RGBA(228, 228, 228, 1)
                               BorderThickness: =1
-                              Fill: =If(ThisItem.Kind = "section", RGBA(230, 241, 251, 1), RGBA(255, 255, 255, 1))
+                              Fill: |-
+                                =If(
+                                    ThisItem.Kind = "section",
+                                    RGBA(230, 241, 251, 1),
+                                    ThisItem.Edited,
+                                    RGBA(251, 233, 241, 1),
+                                    RGBA(255, 255, 255, 1)
+                                )
                               Height: =60
                               Width: =Parent.TemplateWidth
                         - lblAnsSection:
@@ -11287,7 +11296,39 @@ Screens:
                         Fill: =RGBA(124, 195, 96, 1)
                         Height: =46
                         OnSelect: |-
-                          =Patch(予約リスト, LookUp(予約リスト, ID = varSelRes.ID), {Status: "予約確定"});
+                          =If(
+                              // 再承認待ちを承認したときだけ、編集の印を消す
+                              varSelRes.Status = "再承認待ち",
+                              Patch(
+                                  予約リスト,
+                                  LookUp(予約リスト, ID = varSelRes.ID),
+                                  {
+                                      Status: "予約確定",
+                                      回答JSON: JSON(
+                                          ForAll(
+                                              Table(ParseJSON(Coalesce(varSelRes.AnswerJson, "[]"))) As J,
+                                              {
+                                                  ItemKey: Text(J.Value.ItemKey),
+                                                  Label: Text(J.Value.Label),
+                                                  Kind: Text(J.Value.Kind),
+                                                  Choices: Text(J.Value.Choices),
+                                                  Req: Coalesce(Boolean(J.Value.Req), false),
+                                                  Hint: Text(J.Value.Hint),
+                                                  Remarks: Text(J.Value.Remarks),
+                                                  Value: Text(J.Value.Value),
+                                                  Block: Coalesce(Value(J.Value.Block), 2),
+                                                  SortNo: Coalesce(Value(J.Value.SortNo), 0),
+                                                  Source: Text(J.Value.Source),
+                                                  FieldKey: Text(J.Value.FieldKey),
+                                                  edited: false
+                                              }
+                                          ),
+                                          JSONFormat.IndentFour
+                                      )
+                                  }
+                              ),
+                              Patch(予約リスト, LookUp(予約リスト, ID = varSelRes.ID), {Status: "予約確定"})
+                          );
                           Select(btnAdminReload);
                           Set(varSelRes, LookUp(colReservations, ID = varSelRes.ID));
                           Notify("予約を確定しました", NotificationType.Success)

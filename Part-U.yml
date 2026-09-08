@@ -5382,7 +5382,9 @@ Screens:
                                             Kind: Text(J.Value.Kind),
                                             Value: Text(J.Value.Value),
                                             Block: Coalesce(Value(J.Value.Block), 2),
-                                            SortNo: Coalesce(Value(J.Value.SortNo), 0)
+                                            SortNo: Coalesce(Value(J.Value.SortNo), 0),
+                                            // 利用者が編集した項目に印を付ける
+                                            Edited: Coalesce(Boolean(J.Value.edited), false)
                                         }
                                     )
                                 );
@@ -5885,7 +5887,14 @@ Screens:
                             Properties:
                               BorderColor: =RGBA(228, 228, 228, 1)
                               BorderThickness: =1
-                              Fill: =If(ThisItem.Kind = "section", RGBA(230, 241, 251, 1), RGBA(255, 255, 255, 1))
+                              Fill: |-
+                                =If(
+                                    ThisItem.Kind = "section",
+                                    RGBA(230, 241, 251, 1),
+                                    ThisItem.Edited,
+                                    RGBA(251, 233, 241, 1),
+                                    RGBA(255, 255, 255, 1)
+                                )
                               Height: =60
                               Width: =Parent.TemplateWidth
                         - lblAnsSection_My:
