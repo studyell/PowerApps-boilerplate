@@ -6921,7 +6921,8 @@ Screens:
                   Color: =RGBA(255, 255, 255, 1)
                   DisplayMode: |-
                     =If(
-                        IsBlank(varPopupFrame) || IsBlank(varSelectedStart),
+                        // 新規登録は枠が選ばれていないと保存できない
+                        varEntryMode <> "edit" && (IsBlank(varPopupFrame) || IsBlank(varSelectedStart)),
                         DisplayMode.Disabled,
                         // 編集時は、実際に値が変わった項目が1つも無ければ保存させない
                         varEntryMode = "edit" &&
