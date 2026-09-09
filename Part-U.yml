@@ -5004,6 +5004,8 @@ Screens:
         Set(varResFilter, "すべて");
         // 期間モード: "future" = 今日以降 / "month" = 指定年月
         Set(varResRangeMode, "future");
+        // フィルターモード： "user" = 自分 / "division" = 自分以外（所属部の予約分）
+        Set(varResFilterMode, "user");
         Set(varResMonth, Date(Year(Today()), Month(Today()), 1));
         Select(btnAdminReload_UserRes)
     Children:
@@ -5232,7 +5234,7 @@ Screens:
                 Variant: AutoLayout
                 Properties:
                   DropShadow: =DropShadow.None
-                  Height: =533
+                  Height: =543
                   LayoutDirection: =LayoutDirection.Horizontal
                   LayoutOverflowX: =LayoutOverflow.Scroll
                   RadiusBottomLeft: =0
@@ -5349,7 +5351,7 @@ Screens:
                             Control: Gallery@2.15.0
                             Variant: Vertical
                             Properties:
-                              Height: =499
+                              Height: =496
                               Items: |-
                                 =SortByColumns(
                                     Filter(
@@ -5411,6 +5413,7 @@ Screens:
                                           ThisItem.Status,
                                           "予約確定", RGBA(60, 140, 40, 1),
                                           "承認待ち", RGBA(200, 110, 20, 1),
+                                          "再承認待ち", RGBA(200, 110, 20, 1),
                                           "差し戻し", RGBA(200, 40, 90, 1),
                                           RGBA(120, 120, 120, 1)
                                       )
@@ -5547,46 +5550,103 @@ Screens:
                     );
                     ClearCollect(
                         colReservations,
-                        ForAll(
-                            Filter(予約リスト, ResDate >= varResFrom, ResDate <= varResTo, 氏名 = gblUserInfo.氏名) As R,
-                            {
-                                ID: R.ID,
-                                Title: R.Title,
-                                FrameName: R.FrameName,
-                                PatternName: R.パターン名,
-                                ResDate: DateValue(Text(Coalesce(R.ResDate, Date(2000, 1, 1)), "yyyy/mm/dd")),
-                                StartTime: R.StartTime,
-                                SlotId: Coalesce(R.SlotId, 0),
-                                EndTime: R.EndTime,
-                                DurationMin: Coalesce(R.DurationMin, 0),
-                                SlotKey: R.SlotKey,
-                                Status: R.Status,
-                                氏名: R.氏名,
-                                AnswerJson: R.回答JSON,
-                                // 予約登録日時（SharePoint の作成日時）
-                                CreatedAt: R.Created,
-                                // 所属名（支店名）、職種、役職
-                                組織階層2: R.組織階層2,
-                                組織階層3: R.組織階層3,
-                                役職: R.役職,
-                                // 回答JSONから随行社員氏名を1回だけ取り出しておく
-                                随行社員氏名: Coalesce(
-                                    LookUp(
-                                        ForAll(
-                                            Table(ParseJSON(Coalesce(R.回答JSON, "[]"))) As J,
-                                            {Key: Text(J.Value.ItemKey), Val: Text(J.Value.Value)}
+                        If(
+                            varResFilterMode = "user",
+                            ForAll(
+                                Filter(
+                                  予約リスト,
+                                  ResDate >= varResFrom,
+                                  ResDate <= varResTo,
+                                  社員番号 = gblUserInfo.社員番号
+                                ) As R,
+                                {
+                                    ID: R.ID,
+                                    Title: R.Title,
+                                    FrameName: R.FrameName,
+                                    PatternName: R.パターン名,
+                                    ResDate: DateValue(Text(Coalesce(R.ResDate, Date(2000, 1, 1)), "yyyy/mm/dd")),
+                                    StartTime: R.StartTime,
+                                    SlotId: Coalesce(R.SlotId, 0),
+                                    EndTime: R.EndTime,
+                                    DurationMin: Coalesce(R.DurationMin, 0),
+                                    SlotKey: R.SlotKey,
+                                    Status: R.Status,
+                                    社員番号: R.社員番号,
+                                    氏名: R.氏名,
+                                    AnswerJson: R.回答JSON,
+                                    // 予約登録日時（SharePoint の作成日時）
+                                    CreatedAt: R.Created,
+                                    // 所属名（支店名）、職種、役職
+                                    組織階層2: R.組織階層2,
+                                    組織階層3: R.組織階層3,
+                                    役職: R.役職,
+                                    // 回答JSONから随行社員氏名を1回だけ取り出しておく
+                                    随行社員氏名: Coalesce(
+                                        LookUp(
+                                            ForAll(
+                                                Table(ParseJSON(Coalesce(R.回答JSON, "[]"))) As J,
+                                                {Key: Text(J.Value.ItemKey), Val: Text(J.Value.Value)}
+                                            ),
+                                            Key = "随行社員①　氏名",
+                                            Val
                                         ),
-                                        Key = "随行社員①　氏名",
-                                        Val
+                                        ""
                                     ),
-                                    ""
-                                ),
-                                RejectReason: R.RejectReason,
-                                HeadCount: R.HeadCount
-                            }
-                        )
+                                    RejectReason: R.RejectReason,
+                                    HeadCount: R.HeadCount
+                                }
+                            ),
+                            varResFilterMode = "division",
+                            ForAll(
+                                Filter(
+                                  予約リスト,
+                                  ResDate >= varResFrom,
+                                  ResDate <= varResTo,
+                                  組織階層0 = gblUserInfo.組織階層0,
+                                  組織階層1 = gblUserInfo.組織階層1,
+                                  組織階層2 = gblUserInfo.組織階層2
+                                ) As R,
+                                {
+                                    ID: R.ID,
+                                    Title: R.Title,
+                                    FrameName: R.FrameName,
+                                    PatternName: R.パターン名,
+                                    ResDate: DateValue(Text(Coalesce(R.ResDate, Date(2000, 1, 1)), "yyyy/mm/dd")),
+                                    StartTime: R.StartTime,
+                                    SlotId: Coalesce(R.SlotId, 0),
+                                    EndTime: R.EndTime,
+                                    DurationMin: Coalesce(R.DurationMin, 0),
+                                    SlotKey: R.SlotKey,
+                                    Status: R.Status,
+                                    社員番号: R.社員番号,
+                                    氏名: R.氏名,
+                                    AnswerJson: R.回答JSON,
+                                    // 予約登録日時（SharePoint の作成日時）
+                                    CreatedAt: R.Created,
+                                    // 所属名（支店名）、職種、役職
+                                    組織階層2: R.組織階層2,
+                                    組織階層3: R.組織階層3,
+                                    役職: R.役職,
+                                    // 回答JSONから随行社員氏名を1回だけ取り出しておく
+                                    随行社員氏名: Coalesce(
+                                        LookUp(
+                                            ForAll(
+                                                Table(ParseJSON(Coalesce(R.回答JSON, "[]"))) As J,
+                                                {Key: Text(J.Value.ItemKey), Val: Text(J.Value.Value)}
+                                            ),
+                                            Key = "随行社員①　氏名",
+                                            Val
+                                        ),
+                                        ""
+                                    ),
+                                    RejectReason: R.RejectReason,
+                                    HeadCount: R.HeadCount
+                                }
+                            )
+                        )   
                     )
                   Text: =""
+                  Visible: =false
                   Width: =1
                   X: =1140
                   Y: =762
@@ -5749,6 +5809,52 @@ Screens:
                   Width: =900
                   X: =30
                   Y: =170
+            - btnFilterDivision_UserCal_1:
+                Control: Classic/Button@2.2.0
+                Properties:
+                  BorderStyle: =BorderStyle.None
+                  BorderThickness: =0
+                  Color: =If(varResFilterMode = "user", RGBA(255, 255, 255, 1), RGBA(70, 70, 70, 1))
+                  Fill: =If(varResFilterMode = "user", RGBA(56, 96, 178, 1), RGBA(240, 240, 240, 1))
+                  FocusedBorderThickness: =0
+                  Height: =35
+                  HoverFill: =If(varResFilterMode = "user", RGBA(46, 86, 168, 1), RGBA(228, 228, 228, 1))
+                  OnSelect: |-
+                    =Clear(colReservations);
+                    Set(varResFilterMode, "user");
+                    Select(btnAdminReload_UserRes)
+                  RadiusBottomLeft: =5
+                  RadiusBottomRight: =0
+                  RadiusTopLeft: =5
+                  RadiusTopRight: =0
+                  Size: =11
+                  Text: ="自分"
+                  Width: =100
+                  X: =916
+                  Y: =123
+            - btnFilterUser_UserCal_1:
+                Control: Classic/Button@2.2.0
+                Properties:
+                  BorderStyle: =BorderStyle.None
+                  BorderThickness: =0
+                  Color: =If(varResFilterMode = "division", RGBA(255, 255, 255, 1), RGBA(70, 70, 70, 1))
+                  Fill: =If(varResFilterMode = "division", RGBA(56, 96, 178, 1), RGBA(240, 240, 240, 1))
+                  FocusedBorderThickness: =0
+                  Height: =35
+                  HoverFill: =If(varResFilterMode = "division", RGBA(46, 86, 168, 1), RGBA(228, 228, 228, 1))
+                  OnSelect: |-
+                    =Clear(colReservations);
+                    Set(varResFilterMode, "division");
+                    Select(btnAdminReload_UserRes)
+                  RadiusBottomLeft: =0
+                  RadiusBottomRight: =5
+                  RadiusTopLeft: =0
+                  RadiusTopRight: =5
+                  Size: =11
+                  Text: ="自分以外"
+                  Width: =100
+                  X: =1016
+                  Y: =123
             - recResOverlay_UserRes:
                 Control: Rectangle@2.3.0
                 Properties:
@@ -5850,6 +5956,7 @@ Screens:
                               varSelRes.Status,
                               "予約確定", RGBA(60, 140, 40, 1),
                               "承認待ち", RGBA(200, 110, 20, 1),
+                              "再承認待ち", RGBA(200, 110, 20, 1),
                               "差し戻し", RGBA(200, 40, 90, 1),
                               RGBA(120, 120, 120, 1)
                           )
@@ -5857,8 +5964,8 @@ Screens:
                         Height: =140
                         Size: =16
                         Text: =varSelRes.Status
-                        Width: =110
-                        X: =580
+                        Width: =120
+                        X: =570
                         Y: =66
                   - lblAnsHead_My:
                       Control: Label@2.5.1
@@ -5964,6 +6071,7 @@ Screens:
                         Text: ="内容を編集する"
                         Visible: |-
                           =(varSelRes.Status = "予約確定" || varSelRes.Status = "差し戻し") &&
+                          (varSelRes.社員番号 = gblUserInfo.社員番号 || gblUserInfo.役職 = "課長") &&
                               // 更新期限を過ぎたら編集できない
                               !varSelEditExpired
                         Width: =150
@@ -6022,7 +6130,11 @@ Screens:
                           )
                         Size: =12
                         Text: ="取り消し"
-                        Visible: =varSelRes.Status = "予約確定" || varSelRes.Status = "差し戻し"
+                        Visible: |-
+                          =(varSelRes.Status = "予約確定" || varSelRes.Status = "差し戻し") &&
+                          (varSelRes.社員番号 = gblUserInfo.社員番号 || gblUserInfo.役職 = "課長") &&
+                              // 更新期限を過ぎたら編集できない
+                              !varSelEditExpired
                         Width: =110
                         X: =500
                         Y: =602
@@ -6581,45 +6693,6 @@ Screens:
                   Text: =If(varEntryMode = "edit", "予約編集", "予約登録")
                   Width: =700
                   X: =40
-            - recEntryInfo:
-                Control: Rectangle@2.3.0
-                Properties:
-                  BorderColor: =RGBA(220, 220, 220, 1)
-                  BorderThickness: =1
-                  Fill: =RGBA(255, 255, 255, 1)
-                  Height: =104
-                  Width: =1066
-                  X: =40
-                  Y: =84
-            - lblEntryInfo:
-                Control: Label@2.5.1
-                Properties:
-                  Height: =88
-                  Size: =14
-                  Text: |-
-                    =With(
-                        {
-                            fn: If(varEntryMode = "edit", varSelRes.FrameName, varPopupFrame),
-                            dt: If(varEntryMode = "edit", varSelRes.ResDate, varPopupDate),
-                            st: If(varEntryMode = "edit", varSelRes.StartTime, varSelectedStart)
-                        },
-                        "予約枠名：" & fn & "　／　利用日：" &
-                        Text(dt, "yyyy/mm/dd") & "(" &
-                        Switch(Weekday(dt),
-                            1, "日", 2, "月", 3, "火", 4, "水", 5, "木", 6, "金", 7, "土"
-                        ) & ")　／　開始時間：" & Text(st, "HH:mm") & " ～" &
-                        Char(10) & "入力パターン：" &
-                        If(IsBlank(varPatternName), "（この枠にパターンが未設定です）", varPatternName) &
-                        If(varEntryMode = "edit", "　／　ステータス：" & varSelRes.Status, "") &
-                        If(
-                            varEntryMode = "edit" && varSelRes.Status = "差し戻し",
-                            Char(10) & "差し戻し理由：" & Coalesce(varSelRes.RejectReason, "（未記入）"),
-                            ""
-                        )
-                    )
-                  Width: =900
-                  X: =56
-                  Y: =92
             - lblFormGuide:
                 Control: Label@2.5.1
                 Properties:
@@ -6628,12 +6701,12 @@ Screens:
                   Text: ="入力項目（* は必須）"
                   Width: =560
                   X: =40
-                  Y: =200
+                  Y: =82
             - galForm_2:
                 Control: Gallery@2.15.0
                 Variant: BrowseLayout_Flexible_SocialFeed_ver5.0
                 Properties:
-                  Height: =440
+                  Height: =545
                   Items: =SortByColumns(colAnswers, "Block", "SortNo")
                   TemplateSize: |-
                     =// フレキシブル高さのギャラリーでは最小の高さとして働き、
@@ -6642,7 +6715,7 @@ Screens:
                     76
                   Width: =1066
                   X: =40
-                  Y: =230
+                  Y: =125
                 Children:
                   - chkEditMark_2:
                       Control: Classic/CheckBox@2.1.0
@@ -6661,7 +6734,6 @@ Screens:
                           =varEntryMode = "edit" && ThisItem.Kind <> "section" &&
                               Not(ThisItem.ItemKey = "fix_name_kanji" || ThisItem.ItemKey = "fix_division" || ThisItem.ItemKey = "fix_frame" || ThisItem.ItemKey = "fix_date" || ThisItem.ItemKey = "fix_time" || ThisItem.ItemKey = "fix_editlimit" || ThisItem.ItemKey = "fix_duration" || ThisItem.ItemKey = "fix_manager")
                         Width: =24
-                        X: =0
                         Y: =2
                   - recSectionDeco_2:
                       Control: Rectangle@2.3.0
@@ -7298,8 +7370,8 @@ Screens:
                   Text: ="過去の予約から引用"
                   Visible: =varEntryMode = "new"
                   Width: =170
-                  X: =928
-                  Y: =200
+                  X: =916
+                  Y: =82
             - recHistOverlay:
                 Control: Rectangle@2.3.0
                 Properties:
