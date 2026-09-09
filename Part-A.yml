@@ -10226,9 +10226,6 @@ Screens:
       OnVisible: |-
         =Set(varShowResPopup, false);
         Set(varResFilter, "すべて");
-        Set(varIsAdmin, true);
-        // PoC: 予約者本人かどうかの判定は未実装（後日差し替え）
-        Set(varIsOwner, true);
         Set(varShowRejectPopup, false);
         // 期間モード: "future" = 今日以降 / "month" = 指定年月
         Set(varResRangeMode, "future");
@@ -10627,8 +10624,8 @@ Screens:
                                 =SortByColumns(
                                     Filter(
                                         colReservations,
-                                        // 「すべて」にキャンセルは含めない
-                                        If(varResFilter = "すべて", Status <> "キャンセル", Status = varResFilter),
+                                        // 「すべて」に取り消しは含めない
+                                        If(varResFilter = "すべて", Status <> "取り消し", Status = varResFilter),
                                         IsBlank(varResSlotFilter) ||
                                             ID in Filter(colFilterDetails, SlotId = varResSlotFilter).ResId
                                     ),
@@ -10657,7 +10654,9 @@ Screens:
                                             Kind: Text(J.Value.Kind),
                                             Value: Text(J.Value.Value),
                                             Block: Coalesce(Value(J.Value.Block), 2),
-                                            SortNo: Coalesce(Value(J.Value.SortNo), 0)
+                                            SortNo: Coalesce(Value(J.Value.SortNo), 0),
+                                            // 利用者が編集した項目に印を付ける
+                                            Edited: Coalesce(Boolean(J.Value.edited), false)
                                         }
                                     )
                                 );
@@ -10904,10 +10903,10 @@ Screens:
                   Height: =36
                   Items: |-
                     =If(
-                        // 枠で絞り込んでいる間はキャンセルを選べないようにする
-                        // （キャンセル時に予約明細を消すため、枠からは辿れない）
+                        // 枠で絞り込んでいる間は取り消しを選べないようにする
+                        // （取り消し時に予約明細を消すため、枠からは辿れない）
                         IsBlank(varResSlotFilter),
-                        ["すべて", "承認待ち", "予約確定", "差し戻し", "キャンセル"],
+                        ["すべて", "承認待ち", "予約確定", "差し戻し", "取り消し"],
                         ["すべて", "承認待ち", "予約確定", "差し戻し"]
                     )
                   Items.Value: =Value
@@ -11049,7 +11048,7 @@ Screens:
                   Height: =35
                   Text: |-
                     =If(varResRangeMode = "future", "今日以降", Text(varResMonth, "yyyy年m月")) &
-                    " の予約：" & CountRows(Filter(colReservations, Status <> "キャンセル")) & " 件" &
+                    " の予約：" & CountRows(Filter(colReservations, Status <> "取り消し")) & " 件" &
                     "　（承認待ち " & CountRows(Filter(colReservations, Status = "承認待ち")) & " / " &
                     "予約確定 " & CountRows(Filter(colReservations, Status = "予約確定")) & " / " &
                     "差し戻し " & CountRows(Filter(colReservations, Status = "差し戻し")) & "）" &
@@ -11237,7 +11236,14 @@ Screens:
                             Properties:
                               BorderColor: =RGBA(228, 228, 228, 1)
                               BorderThickness: =1
-                              Fill: =If(ThisItem.Kind = "section", RGBA(230, 241, 251, 1), RGBA(255, 255, 255, 1))
+                              Fill: |-
+                                =If(
+                                    ThisItem.Kind = "section",
+                                    RGBA(230, 241, 251, 1),
+                                    ThisItem.Edited,
+                                    RGBA(251, 233, 241, 1),
+                                    RGBA(255, 255, 255, 1)
+                                )
                               Height: =60
                               Width: =Parent.TemplateWidth
                         - lblAnsSection:
@@ -11292,13 +11298,45 @@ Screens:
                         Fill: =RGBA(124, 195, 96, 1)
                         Height: =46
                         OnSelect: |-
-                          =Patch(予約リスト, LookUp(予約リスト, ID = varSelRes.ID), {Status: "予約確定"});
+                          =If(
+                              // 再承認待ちを承認したときだけ、編集の印を消す
+                              varSelRes.Status = "再承認待ち",
+                              Patch(
+                                  予約リスト,
+                                  LookUp(予約リスト, ID = varSelRes.ID),
+                                  {
+                                      Status: "予約確定",
+                                      回答JSON: JSON(
+                                          ForAll(
+                                              Table(ParseJSON(Coalesce(varSelRes.AnswerJson, "[]"))) As J,
+                                              {
+                                                  ItemKey: Text(J.Value.ItemKey),
+                                                  Label: Text(J.Value.Label),
+                                                  Kind: Text(J.Value.Kind),
+                                                  Choices: Text(J.Value.Choices),
+                                                  Req: Coalesce(Boolean(J.Value.Req), false),
+                                                  Hint: Text(J.Value.Hint),
+                                                  Remarks: Text(J.Value.Remarks),
+                                                  Value: Text(J.Value.Value),
+                                                  Block: Coalesce(Value(J.Value.Block), 2),
+                                                  SortNo: Coalesce(Value(J.Value.SortNo), 0),
+                                                  Source: Text(J.Value.Source),
+                                                  FieldKey: Text(J.Value.FieldKey),
+                                                  edited: false
+                                              }
+                                          ),
+                                          JSONFormat.IndentFour
+                                      )
+                                  }
+                              ),
+                              Patch(予約リスト, LookUp(予約リスト, ID = varSelRes.ID), {Status: "予約確定"})
+                          );
                           Select(btnAdminReload);
                           Set(varSelRes, LookUp(colReservations, ID = varSelRes.ID));
                           Notify("予約を確定しました", NotificationType.Success)
                         Size: =12
                         Text: ="予約確定にする"
-                        Visible: =varIsAdmin && (varSelRes.Status = "承認待ち" || varSelRes.Status = "差し戻し")
+                        Visible: =varSelRes.Status = "承認待ち" || varSelRes.Status = "再承認待ち"
                         Width: =150
                         X: =20
                         Y: =602
@@ -11322,7 +11360,7 @@ Screens:
                           )
                         Size: =12
                         Text: ="差し戻す"
-                        Visible: =varIsAdmin && varSelRes.Status = "予約確定"
+                        Visible: =varSelRes.Status = "予約確定"
                         Width: =150
                         X: =180
                         Y: =602
@@ -11334,22 +11372,12 @@ Screens:
                         Fill: =RGBA(0, 120, 212, 1)
                         Height: =46
                         OnSelect: |-
-                          =If(
-                              !varIsAdmin && varSelEditExpired,
-                              Notify(
-                                  "更新期限（" & Text(varSelEditLimit, "yyyy/mm/dd") &
-                                      " まで）を過ぎているため変更できません",
-                                  NotificationType.Warning
-                              ),
-                              Set(varEntryMode, "edit");
-                              Set(varShowResPopup, false);
-                              Navigate(scnReserveEntryUser, ScreenTransition.Cover)
-                          )
+                          =Set(varEntryMode, "edit");
+                          Set(varShowResPopup, false);
+                          Navigate(scnReserveEntryUser, ScreenTransition.Cover)
                         Size: =12
                         Text: ="内容を編集する"
-                        Visible: |-
-                          =(varIsAdmin && (varSelRes.Status = "予約確定" || varSelRes.Status = "差し戻し"))
-                              || (varIsOwner && varSelRes.Status = "差し戻し")
+                        Visible: =varSelRes.Status = "予約確定" || varSelRes.Status = "差し戻し"
                         Width: =150
                         X: =340
                         Y: =602
@@ -11360,14 +11388,7 @@ Screens:
                         Color: =RGBA(180, 40, 40, 1)
                         Height: =46
                         OnSelect: |-
-                          =If(
-                              !varIsAdmin && varSelEditExpired,
-                              Notify(
-                                  "更新期限（" & Text(varSelEditLimit, "yyyy/mm/dd") &
-                                      " まで）を過ぎているためキャンセルできません",
-                                  NotificationType.Warning
-                              ),
-                              // 押さえていた枠をすべて解放し、日枠の満枠スロット数を数え直す
+                          =// 押さえていた枠をすべて解放し、日枠の満枠スロット数を数え直す
                           // ForAll の中では Set が使えないため、先に日枠のIDを取得しておく
                           Set(varRelDayId, First(Filter(予約明細, ResId = varSelRes.ID)).DayId);
                           ForAll(
@@ -11389,7 +11410,7 @@ Screens:
                           Patch(
                               予約リスト,
                               LookUp(予約リスト, ID = varSelRes.ID),
-                              {Status: "キャンセル"}
+                              {Status: "取り消し"}
                           );
                           If(
                               !IsBlank(varRelDayId),
@@ -11401,14 +11422,11 @@ Screens:
                               )
                           );
                           Select(btnAdminReload);
-                              Set(varShowResPopup, false);
-                              Notify("予約をキャンセルしました（枠を解放しました）", NotificationType.Success)
-                          )
+                          Set(varShowResPopup, false);
+                          Notify("予約を取り消ししました（枠を解放しました）", NotificationType.Success)
                         Size: =12
-                        Text: ="キャンセル"
-                        Visible: |-
-                          =(varIsAdmin && (varSelRes.Status = "予約確定" || varSelRes.Status = "差し戻し"))
-                              || (varIsOwner && varSelRes.Status = "差し戻し")
+                        Text: ="取り消し"
+                        Visible: =varSelRes.Status = "予約確定" || varSelRes.Status = "差し戻し"
                         Width: =110
                         X: =500
                         Y: =602
