@@ -4175,6 +4175,7 @@ Screens:
                     Set(varSubCatAll, true);
                     Select(btnResizeWeeks_1_LstA)
                   Text: =""
+                  Visible: =false
                   Width: =1
                   X: =1124
                   Y: =44
@@ -8276,7 +8277,7 @@ Screens:
         ClearCollect(
             colWeekdayOptions,
             {WdName: "月"}, {WdName: "火"}, {WdName: "水"}, {WdName: "木"},
-            {WdName: "金"}, {WdName: "土"}, {WdName: "日"}, {WdName: "祝"}
+            {WdName: "金"}, {WdName: "土"}, {WdName: "日"}
         );
         ClearCollect(colWdSelectedPre, {WdName: ""});
         Clear(colWdSelectedPre);
@@ -8694,7 +8695,7 @@ Screens:
                     Set(varFrameNamePre, "");
                     Set(varFrameTypePre, Blank());
                     Set(varPeriodStartPre, Today());
-                    Set(varPeriodEndPre, DateAdd(Today(), 1, TimeUnit.Years));
+                    Set(varPeriodEndPre, Today());
                     Set(varStartHourVPre, 10);
                     Set(varStartMinVPre, 0);
                     Set(varEndHourVPre, 18);
@@ -11328,7 +11329,7 @@ Screens:
                                                   edited: false
                                               }
                                           ),
-                                          JSONFormat.IndentFour
+                                          JSONFormat.Compact
                                       )
                                   }
                               ),
@@ -12553,7 +12554,7 @@ Screens:
                                                 colAnswers,
                                                 ItemKey, Label, Kind, Choices, Req, Hint, Remarks, Value, Block, SortNo, Source, FieldKey
                                             ),
-                                            JSONFormat.IndentFour
+                                            JSONFormat.Compact
                                         ),
                                         // 差し戻しからの再申請は「承認待ち」に戻す
                                         Status: If(varSelRes.Status = "差し戻し", "承認待ち", varSelRes.Status)
@@ -12593,7 +12594,7 @@ Screens:
                                                 colAnswers,
                                                 ItemKey, Label, Kind, Choices, Req, Hint, Remarks, Value, Block, SortNo, Source, FieldKey
                                             ),
-                                            JSONFormat.IndentFour
+                                            JSONFormat.Compact
                                         )
                                     }
                                 )

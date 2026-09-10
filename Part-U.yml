@@ -3993,6 +3993,7 @@ Screens:
                     Set(varSubCatAll, true);
                     Select(btnResizeWeeks_UserCal_LstU)
                   Text: =""
+                  Visible: =false
                   Width: =1
                   X: =1124
                   Y: =44
@@ -5550,99 +5551,71 @@ Screens:
                     );
                     ClearCollect(
                         colReservations,
-                        If(
-                            varResFilterMode = "user",
-                            ForAll(
+                        ForAll(
+                            If(
+                                varResFilterMode = "user",
                                 Filter(
-                                  予約リスト,
-                                  ResDate >= varResFrom,
-                                  ResDate <= varResTo,
-                                  社員番号 = gblUserInfo.社員番号
-                                ) As R,
-                                {
-                                    ID: R.ID,
-                                    Title: R.Title,
-                                    FrameName: R.FrameName,
-                                    PatternName: R.パターン名,
-                                    ResDate: DateValue(Text(Coalesce(R.ResDate, Date(2000, 1, 1)), "yyyy/mm/dd")),
-                                    StartTime: R.StartTime,
-                                    SlotId: Coalesce(R.SlotId, 0),
-                                    EndTime: R.EndTime,
-                                    DurationMin: Coalesce(R.DurationMin, 0),
-                                    SlotKey: R.SlotKey,
-                                    Status: R.Status,
-                                    社員番号: R.社員番号,
-                                    氏名: R.氏名,
-                                    AnswerJson: R.回答JSON,
-                                    // 予約登録日時（SharePoint の作成日時）
-                                    CreatedAt: R.Created,
-                                    // 所属名（支店名）、職種、役職
-                                    組織階層2: R.組織階層2,
-                                    組織階層3: R.組織階層3,
-                                    役職: R.役職,
-                                    // 回答JSONから随行社員氏名を1回だけ取り出しておく
-                                    随行社員氏名: Coalesce(
-                                        LookUp(
-                                            ForAll(
-                                                Table(ParseJSON(Coalesce(R.回答JSON, "[]"))) As J,
-                                                {Key: Text(J.Value.ItemKey), Val: Text(J.Value.Value)}
-                                            ),
-                                            Key = "随行社員①　氏名",
-                                            Val
-                                        ),
-                                        ""
+                                    予約リスト,
+                                    ResDate >= varResFrom,
+                                    ResDate <= varResTo,
+                                    社員番号 = gblUserInfo.社員番号
+                                ),
+                                varResFilterMode = "division",
+                                If(
+                                    gblUserInfo.組織階層0 = "本社",
+                                    Filter(
+                                        予約リスト,
+                                        ResDate >= varResFrom,
+                                        ResDate <= varResTo,
+                                        組織階層0 = gblUserInfo.組織階層0,
+                                        組織階層1 = gblUserInfo.組織階層1
                                     ),
-                                    RejectReason: R.RejectReason,
-                                    HeadCount: R.HeadCount
-                                }
-                            ),
-                            varResFilterMode = "division",
-                            ForAll(
-                                Filter(
-                                  予約リスト,
-                                  ResDate >= varResFrom,
-                                  ResDate <= varResTo,
-                                  組織階層0 = gblUserInfo.組織階層0,
-                                  組織階層1 = gblUserInfo.組織階層1,
-                                  組織階層2 = gblUserInfo.組織階層2
-                                ) As R,
-                                {
-                                    ID: R.ID,
-                                    Title: R.Title,
-                                    FrameName: R.FrameName,
-                                    PatternName: R.パターン名,
-                                    ResDate: DateValue(Text(Coalesce(R.ResDate, Date(2000, 1, 1)), "yyyy/mm/dd")),
-                                    StartTime: R.StartTime,
-                                    SlotId: Coalesce(R.SlotId, 0),
-                                    EndTime: R.EndTime,
-                                    DurationMin: Coalesce(R.DurationMin, 0),
-                                    SlotKey: R.SlotKey,
-                                    Status: R.Status,
-                                    社員番号: R.社員番号,
-                                    氏名: R.氏名,
-                                    AnswerJson: R.回答JSON,
-                                    // 予約登録日時（SharePoint の作成日時）
-                                    CreatedAt: R.Created,
-                                    // 所属名（支店名）、職種、役職
-                                    組織階層2: R.組織階層2,
-                                    組織階層3: R.組織階層3,
-                                    役職: R.役職,
-                                    // 回答JSONから随行社員氏名を1回だけ取り出しておく
-                                    随行社員氏名: Coalesce(
-                                        LookUp(
-                                            ForAll(
-                                                Table(ParseJSON(Coalesce(R.回答JSON, "[]"))) As J,
-                                                {Key: Text(J.Value.ItemKey), Val: Text(J.Value.Value)}
-                                            ),
-                                            Key = "随行社員①　氏名",
-                                            Val
+                                    Filter(
+                                        予約リスト,
+                                        ResDate >= varResFrom,
+                                        ResDate <= varResTo,
+                                        組織階層0 = gblUserInfo.組織階層0,
+                                        組織階層1 = gblUserInfo.組織階層1,
+                                        組織階層2 = gblUserInfo.組織階層2
+                                    )
+                                )
+                            ) As R,
+                            {
+                                ID: R.ID,
+                                Title: R.Title,
+                                FrameName: R.FrameName,
+                                PatternName: R.パターン名,
+                                ResDate: DateValue(Text(Coalesce(R.ResDate, Date(2000, 1, 1)), "yyyy/mm/dd")),
+                                StartTime: R.StartTime,
+                                SlotId: Coalesce(R.SlotId, 0),
+                                EndTime: R.EndTime,
+                                DurationMin: Coalesce(R.DurationMin, 0),
+                                SlotKey: R.SlotKey,
+                                Status: R.Status,
+                                社員番号: R.社員番号,
+                                氏名: R.氏名,
+                                AnswerJson: R.回答JSON,
+                                // 予約登録日時（SharePoint の作成日時）
+                                CreatedAt: R.Created,
+                                // 所属名（支店名）、職種、役職
+                                組織階層2: R.組織階層2,
+                                組織階層3: R.組織階層3,
+                                役職: R.役職,
+                                // 回答JSONから随行社員氏名を1回だけ取り出しておく
+                                随行社員氏名: Coalesce(
+                                    LookUp(
+                                        ForAll(
+                                            Table(ParseJSON(Coalesce(R.回答JSON, "[]"))) As J,
+                                            {Key: Text(J.Value.ItemKey), Val: Text(J.Value.Value)}
                                         ),
-                                        ""
+                                        Key = "随行社員①　氏名",
+                                        Val
                                     ),
-                                    RejectReason: R.RejectReason,
-                                    HeadCount: R.HeadCount
-                                }
-                            )
+                                    ""
+                                ),
+                                RejectReason: R.RejectReason,
+                                HeadCount: R.HeadCount
+                            }
                         )   
                     )
                   Text: =""
@@ -6880,7 +6853,18 @@ Screens:
                                           Text(varSelectedEnd, "HH:mm") & "（" & varDurMin & "分）"
                                   }
                               )
-                          )
+                          );
+                          // 担当課長を選んだらメールアドレスを引き直す
+                          If(
+                              ThisItem.ItemKey = "fix_manager",
+                              Patch(
+                                colAnswers,
+                                LookUp(colAnswers, ItemKey = ThisItem.ItemKey),
+                                {
+                                  Remarks: LookUp(colManager, 氏名 = Self.Selected.Value, メールアドレス)
+                                }
+                              )
+                          );
                         Visible: =ThisItem.Kind = "select" && Not(ThisItem.ItemKey = "fix_name_kanji" || ThisItem.ItemKey = "fix_frame" || ThisItem.ItemKey = "fix_date" || ThisItem.ItemKey = "fix_time" || ThisItem.ItemKey = "fix_editlimit" || (ThisItem.ItemKey = "fix_duration" && varEntryMode = "edit") || (ThisItem.ItemKey = "fix_manager" && varEntryMode = "edit"))
                         Width: =320
                         X: =If(varEntryMode = "edit" && ThisItem.Kind <> "section", 24, 0)
@@ -6957,11 +6941,11 @@ Screens:
                         Size: =10
                         Text: |-
                           =If(
-                              ThisItem.Kind = "section" || IsBlank(ThisItem.Remarks),
+                              ThisItem.Kind = "section" || ThisItem.ItemKey = "fix_manager" || IsBlank(ThisItem.Remarks),
                               "",
                               "※ " & ThisItem.Remarks
                           )
-                        Visible: =ThisItem.Kind <> "section" && !IsBlank(ThisItem.Remarks)
+                        Visible: =ThisItem.Kind <> "section" && ThisItem.ItemKey = "fix_manager" && !IsBlank(ThisItem.Remarks)
                         Width: =520
                         X: =If(varEntryMode = "edit" && ThisItem.Kind <> "section", 24, 0)
                         Y: |-
@@ -7162,7 +7146,7 @@ Screens:
                                                     edited: A.Edited && A.Value <> A.OrigValue
                                                 }
                                             ),
-                                            JSONFormat.IndentFour
+                                            JSONFormat.Compact
                                         ),
                                         // 編集して再申請するので「再承認待ち」にする
                                         Status: "再承認待ち"
@@ -7216,7 +7200,7 @@ Screens:
                                                     edited: false
                                                 }
                                             ),
-                                            JSONFormat.IndentFour
+                                            JSONFormat.Compact
                                         )
                                     }
                                 )
@@ -7318,6 +7302,7 @@ Screens:
                         }
                     )
                   Text: =""
+                  Visible: =false
                   Width: =1
                   X: =1140
                   Y: =762
