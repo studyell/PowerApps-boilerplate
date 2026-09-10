@@ -6945,7 +6945,7 @@ Screens:
                               "",
                               "※ " & ThisItem.Remarks
                           )
-                        Visible: =ThisItem.Kind <> "section" && ThisItem.ItemKey = "fix_manager" && !IsBlank(ThisItem.Remarks)
+                        Visible: =ThisItem.Kind <> "section" && ThisItem.ItemKey <> "fix_manager" && !IsBlank(ThisItem.Remarks)
                         Width: =520
                         X: =If(varEntryMode = "edit" && ThisItem.Kind <> "section", 24, 0)
                         Y: |-

@@ -1322,10 +1322,10 @@ Screens:
                                           RadiusTopLeft: =4
                                           RadiusTopRight: =4
                                           Size: =11
-                                          Text: =ThisItem.HolTitle
-                                          Width: =ThisItem.PosW - 6
                                           X: =ThisItem.PosX + 3
                                           Y: =ThisItem.PosY + 1 - (ThisItem.RowNum - 1) + 1.5
+                                          Text: =ThisItem.HolTitle
+                                          Width: =ThisItem.PosW - 6
                               - galWeekSlots_1:
                                   Control: Gallery@2.15.0
                                   Variant: Vertical
@@ -1485,9 +1485,9 @@ Screens:
                                           Size: =9
                                           Text: =ThisItem.TimeLabel & Char(10) & ThisItem.StatusLabel
                                           VerticalAlign: =VerticalAlign.Top
-                                          Width: =ThisItem.PosW - 6
                                           X: =ThisItem.PosX + 3
                                           Y: =ThisItem.PosY + 1 - (ThisItem.RowNum - 1) + 1.5
+                                          Width: =ThisItem.PosW - 6
             - conMonthView_1:
                 Control: GroupContainer@1.5.0
                 Variant: ManualLayout
@@ -9105,7 +9105,7 @@ Screens:
                       Properties:
                         DropShadow: =DropShadow.None
                         FillPortions: =0
-                        Height: =1060
+                        Height: =800
                         Width: =Parent.Width
                       Children:
                         - lblFrameMode_Pre:
@@ -9738,76 +9738,6 @@ Screens:
                               Width: =350
                               X: =180
                               Y: =740
-                        - lblSlotPreviewTitle_Pre:
-                            Control: Label@2.5.1
-                            Properties:
-                              FontWeight: =FontWeight.Semibold
-                              Height: =26
-                              Size: =11
-                              Text: ="生成される時間枠（プレビュー）"
-                              Width: =500
-                              X: =22
-                              Y: =793
-                        - lblSlotPreview_Pre:
-                            Control: Label@2.5.1
-                            Properties:
-                              Fill: =RGBA(245, 245, 245, 1)
-                              Height: =84
-                              PaddingLeft: =8
-                              PaddingTop: =8
-                              Size: =11
-                              Text: |-
-                                =With(
-                                    {
-                                        totalMin: (varEndHourVPre * 60 + varEndMinVPre) - (varStartHourVPre * 60 + varStartMinVPre),
-                                        unit: Coalesce(varFrameUnitPre, 0)
-                                    },
-                                    If(
-                                        IsBlank(ddFrameType_Pre.Selected.Value),
-                                        "予約枠タイプを選択すると表示されます",
-                                        totalMin <= 0,
-                                        "実施時間を正しく入力すると表示されます",
-                                        ddFrameType_Pre.Selected.Value = "日にち単位",
-                                        "終日 1枠：" & Text(varStartHourVPre, "00") & ":" & Text(varStartMinVPre, "00") &
-                                            " 〜 " & Text(varEndHourVPre, "00") & ":" & Text(varEndMinVPre, "00") & Char(10) &
-                                            "定員：" &
-                                            If(IsBlank(txtCapacity_Pre.Text), "未入力", txtCapacity_Pre.Text & " 名"),
-                                        unit < 1,
-                                        "枠の単位（30分単位／60分単位）を選択すると表示されます",
-                                        Mod(totalMin, unit) <> 0,
-                                        "実施時間 " & totalMin & "分 は " & unit &
-                                            "分単位で割り切れません（実施時間または単位を見直してください）",
-                                        With(
-                                            {slots: RoundDown(totalMin / unit, 0)},
-                                            unit & "分単位 × " & slots & "枠" & Char(10) &
-                                            Concat(
-                                                ForAll(
-                                                    Sequence(slots, 0) As S,
-                                                    {
-                                                        T: Text(
-                                                            DateAdd(
-                                                                DateAdd(
-                                                                    DateAdd(Today(), varStartHourVPre, TimeUnit.Hours),
-                                                                    varStartMinVPre,
-                                                                    TimeUnit.Minutes
-                                                                ),
-                                                                S.Value * unit,
-                                                                TimeUnit.Minutes
-                                                            ),
-                                                            "HH:mm"
-                                                        )
-                                                    }
-                                                ),
-                                                T,
-                                                " / "
-                                            )
-                                        )
-                                    )
-                                )
-                              VerticalAlign: =VerticalAlign.Top
-                              Width: =584
-                              X: =18
-                              Y: =831
             - conExceptForm:
                 Control: GroupContainer@1.5.0
                 Variant: ManualLayout
