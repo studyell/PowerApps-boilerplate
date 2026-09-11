@@ -7025,9 +7025,16 @@ Screens:
                   Fill: =RGBA(0, 0, 0, 0)
                   Height: =1
                   OnSelect: |-
-                    =// 押さえるスロットを組み立てる（開始スロットから利用時間ぶん）
+                    =// 押さえるスロットを組み立て、空きを確認してから保存へ進む
+                    // 日にち単位：人数で判定する（新規・編集とも）
+                    // 時間単位　：新規のみ、跨るすべての枠が予約済みでないかを判定する
+                    //             （編集は時間を変えられず、人数も関係ないため判定しない）
                     With(
-                        {hc: Value(LookUp(colAnswers, ItemKey = "fix_headcount", Value))},
+                        {
+                            hc: Value(LookUp(colAnswers, ItemKey = "fix_headcount", Value)),
+                            // 編集時は varDayInfo が古い値のままのことがあるため、日枠マスタから取り直す
+                            ft: Coalesce(LookUp(予約枠日マスタ, ID = varEntryDayId).FrameType, "時間単位")
+                        },
                         ClearCollect(
                             colHoldSlots,
                             ForAll(
@@ -7044,20 +7051,31 @@ Screens:
                                 }
                             )
                         );
-                        // 最新の枠情報で、全スロットの空きを確認する
+                        // 最新の枠情報（直前に Refresh 済み）で空きを確認する
                         ClearCollect(
                             colHoldCheck,
                             ForAll(
                                 colHoldSlots As H,
                                 With(
-                                    {sl: LookUp(予約枠時間マスタ, ID = H.SlotId)},
+                                    {
+                                        sl: LookUp(予約枠時間マスタ, ID = H.SlotId),
+                                        // 編集時に自分がすでに押さえているぶん（新規は 0）
+                                        mine: Coalesce(LookUp(colMyDetails, SlotId = H.SlotId).HeadCount, 0)
+                                    },
                                     {
                                         SlotId: H.SlotId,
                                         StartTime: H.StartTime,
-                                        Ng: IsBlank(sl.ID) ||
-                                            Coalesce(sl.ReservedCount, 0) -
-                                                Coalesce(LookUp(colMyDetails, SlotId = H.SlotId).HeadCount, 0) +
-                                                hc > Coalesce(sl.Capacity, 0)
+                                        // 残り人数（自分が押さえているぶんは空きとして扱う）
+                                        Remain: Coalesce(sl.Capacity, 0) - (Coalesce(sl.ReservedCount, 0) - mine),
+                                        Ng: If(
+                                            ft = "日にち単位",
+                                            IsBlank(sl.ID) ||
+                                                Coalesce(sl.ReservedCount, 0) - mine + hc > Coalesce(sl.Capacity, 0),
+                                            varEntryMode <> "edit",
+                                            IsBlank(sl.ID) ||
+                                                Coalesce(sl.ReservedCount, 0) >= Coalesce(sl.Capacity, 0),
+                                            false
+                                        )
                                     }
                                 )
                             )
@@ -7066,36 +7084,24 @@ Screens:
                             CountRows(colHoldSlots) < 1,
                             Notify("利用時間を選び直してください", NotificationType.Error),
                             CountRows(Filter(colHoldCheck, Ng)) > 0,
-                            Notify(
-                                "他の方が予約したため確保できません（" &
-                                    Concat(
-                                        Filter(colHoldCheck, Ng),
-                                        Text(StartTime, "HH:mm"),
-                                        " / "
-                                    ) & "）。利用時間を見直してください",
-                                NotificationType.Error
-                            ),
-                            // ---- 確保できる：編集なら旧明細を解放してから作り直す ----
                             If(
-                                varEntryMode = "edit",
-                                ForAll(
-                                    Filter(予約明細, ResId = varSelRes.ID) As D,
-                                    Patch(
-                                        予約枠時間マスタ,
-                                        LookUp(予約枠時間マスタ, ID = D.SlotId),
-                                        {
-                                            ReservedCount: Max(
-                                                Coalesce(
-                                                    LookUp(予約枠時間マスタ, ID = D.SlotId).ReservedCount,
-                                                    0
-                                                ) - Coalesce(D.HeadCount, 0),
-                                                0
-                                            )
-                                        }
-                                    )
-                                );
-                                Remove(予約明細, Filter(予約明細, ResId = varSelRes.ID))
-                            );
+                                ft = "日にち単位",
+                                Notify(
+                                    "定員を超えるため予約できません（残り " &
+                                        Max(0, Min(Filter(colHoldCheck, Ng), Remain)) & " 名）",
+                                    NotificationType.Error
+                                ),
+                                Notify(
+                                    "ほかの予約と時間が重なるため予約できません（" &
+                                        Concat(
+                                            Filter(colHoldCheck, Ng),
+                                            Text(StartTime, "HH:mm"),
+                                            " / "
+                                        ) & "）",
+                                    NotificationType.Error
+                                )
+                            ),
+                            // ---- 確保できる：予約リストへ保存する ----
                             Select(btnSaveReservation)
                         )
                     )
@@ -7110,163 +7116,115 @@ Screens:
                   Fill: =RGBA(0, 0, 0, 0)
                   Height: =1
                   OnSelect: |-
-                    =// 予約の本体を保存し、明細を作って枠を押さえる
+                    =// 予約の本体を保存する
+                    // 明細の作成・ReservedCount の加算・FullSlots の更新は Power Automate フローで行う
                     With(
                         {hc: Value(LookUp(colAnswers, ItemKey = "fix_headcount", Value))},
                         Set(
                             varSavedRes,
-                            If(
-                                varEntryMode = "edit",
-                                Patch(
-                                    予約リスト,
-                                    LookUp(予約リスト, ID = varSelRes.ID),
-                                    {
-                                        StartTime: varSelectedStart,
-                                        EndTime: varSelectedEnd,
-                                        DurationMin: varDurMin,
-                                        氏名: LookUp(colAnswers, ItemKey = "fix_name_kanji", Value),
-                                        HeadCount: hc,
-                                        回答JSON: JSON(
-                                            ForAll(
-                                                colAnswers As A,
-                                                {
-                                                    ItemKey: A.ItemKey,
-                                                    Label: A.Label,
-                                                    Kind: A.Kind,
-                                                    Choices: A.Choices,
-                                                    Req: A.Req,
-                                                    Hint: A.Hint,
-                                                    Remarks: A.Remarks,
-                                                    Value: A.Value,
-                                                    Block: A.Block,
-                                                    SortNo: A.SortNo,
-                                                    Source: A.Source,
-                                                    FieldKey: A.FieldKey,
-                                                    // チェックを入れたうえで値が変わった項目だけ印を付ける
-                                                    edited: A.Edited && A.Value <> A.OrigValue
-                                                }
+                            // 保存に失敗したときは空にして、下で判定する
+                            IfError(
+                                If(
+                                    varEntryMode = "edit",
+                                    Patch(
+                                        予約リスト,
+                                        LookUp(予約リスト, ID = varSelRes.ID),
+                                        {
+                                            StartTime: varSelectedStart,
+                                            EndTime: varSelectedEnd,
+                                            DurationMin: varDurMin,
+                                            氏名: LookUp(colAnswers, ItemKey = "fix_name_kanji", Value),
+                                            HeadCount: hc,
+                                            回答JSON: JSON(
+                                                ForAll(
+                                                    colAnswers As A,
+                                                    {
+                                                        ItemKey: A.ItemKey,
+                                                        Label: A.Label,
+                                                        Kind: A.Kind,
+                                                        Choices: A.Choices,
+                                                        Req: A.Req,
+                                                        Hint: A.Hint,
+                                                        Remarks: A.Remarks,
+                                                        Value: A.Value,
+                                                        Block: A.Block,
+                                                        SortNo: A.SortNo,
+                                                        Source: A.Source,
+                                                        FieldKey: A.FieldKey,
+                                                        // チェックを入れたうえで値が変わった項目だけ印を付ける
+                                                        edited: A.Edited && A.Value <> A.OrigValue
+                                                    }
+                                                ),
+                                                JSONFormat.Compact
                                             ),
-                                            JSONFormat.Compact
-                                        ),
-                                        // 編集して再申請するので「再承認待ち」にする
-                                        Status: "再承認待ち"
-                                    }
+                                            // 編集して再申請するので「再承認待ち」にする
+                                            Status: "再承認待ち"
+                                        }
+                                    ),
+                                    Patch(
+                                        予約リスト,
+                                        Defaults(予約リスト),
+                                        {
+                                            Title: varPopupFrame & "_" & Text(varPopupDate, "yyyymmdd") & "_" &
+                                                Text(varSelectedStart, "HHmm"),
+                                            FrameName: varPopupFrame,
+                                            パターン名: varPatternName,
+                                            ResDate: varPopupDate,
+                                            StartTime: varSelectedStart,
+                                            EndTime: varSelectedEnd,
+                                            DurationMin: varDurMin,
+                                            SlotId: varSelectedSlotId,
+                                            // 枠名は重複しうるため、分類と日時の組み合わせをキーにする
+                                            SlotKey: Coalesce(varDayInfo.Category, "") & "|" &
+                                                Coalesce(varDayInfo.SubCategory, "") & "|" &
+                                                Text(varPopupDate, "yyyy/mm/dd") & " " &
+                                                Text(varSelectedStart, "HH:mm"),
+                                            Status: "承認待ち",
+                                            // 予約者の所属情報（App.OnStart で取得した gblUserInfo から）
+                                            社員番号: gblUserInfo.社員番号,
+                                            役職: gblUserInfo.役職,
+                                            組織階層0: gblUserInfo.組織階層0,
+                                            組織階層1: gblUserInfo.組織階層1,
+                                            組織階層2: gblUserInfo.組織階層2,
+                                            組織階層3: gblUserInfo.組織階層3,
+                                            メールアドレス: gblUserInfo.メールアドレス,
+                                            氏名: LookUp(colAnswers, ItemKey = "fix_name_kanji", Value),
+                                            HeadCount: hc,
+                                            回答JSON: JSON(
+                                                ForAll(
+                                                    colAnswers As A,
+                                                    {
+                                                        ItemKey: A.ItemKey,
+                                                        Label: A.Label,
+                                                        Kind: A.Kind,
+                                                        Choices: A.Choices,
+                                                        Req: A.Req,
+                                                        Hint: A.Hint,
+                                                        Remarks: A.Remarks,
+                                                        Value: A.Value,
+                                                        Block: A.Block,
+                                                        SortNo: A.SortNo,
+                                                        Source: A.Source,
+                                                        FieldKey: A.FieldKey,
+                                                        edited: false
+                                                    }
+                                                ),
+                                                JSONFormat.Compact
+                                            )
+                                        }
+                                    )
                                 ),
-                                Patch(
-                                    予約リスト,
-                                    Defaults(予約リスト),
-                                    {
-                                        Title: varPopupFrame & "_" & Text(varPopupDate, "yyyymmdd") & "_" &
-                                            Text(varSelectedStart, "HHmm"),
-                                        FrameName: varPopupFrame,
-                                        パターン名: varPatternName,
-                                        ResDate: varPopupDate,
-                                        StartTime: varSelectedStart,
-                                        EndTime: varSelectedEnd,
-                                        DurationMin: varDurMin,
-                                        SlotId: varSelectedSlotId,
-                                        // 枠名は重複しうるため、分類と日時の組み合わせをキーにする
-                                        SlotKey: Coalesce(varDayInfo.Category, "") & "|" &
-                                            Coalesce(varDayInfo.SubCategory, "") & "|" &
-                                            Text(varPopupDate, "yyyy/mm/dd") & " " &
-                                            Text(varSelectedStart, "HH:mm"),
-                                        Status: "承認待ち",
-                                        // 予約者の所属情報（App.OnStart で取得した gblUserInfo から）
-                                        社員番号: gblUserInfo.社員番号,
-                                        役職: gblUserInfo.役職,
-                                        組織階層0: gblUserInfo.組織階層0,
-                                        組織階層1: gblUserInfo.組織階層1,
-                                        組織階層2: gblUserInfo.組織階層2,
-                                        組織階層3: gblUserInfo.組織階層3,
-                                        メールアドレス: gblUserInfo.メールアドレス,
-                                        氏名: LookUp(colAnswers, ItemKey = "fix_name_kanji", Value),
-                                        HeadCount: hc,
-                                        回答JSON: JSON(
-                                            ForAll(
-                                                colAnswers As A,
-                                                {
-                                                    ItemKey: A.ItemKey,
-                                                    Label: A.Label,
-                                                    Kind: A.Kind,
-                                                    Choices: A.Choices,
-                                                    Req: A.Req,
-                                                    Hint: A.Hint,
-                                                    Remarks: A.Remarks,
-                                                    Value: A.Value,
-                                                    Block: A.Block,
-                                                    SortNo: A.SortNo,
-                                                    Source: A.Source,
-                                                    FieldKey: A.FieldKey,
-                                                    edited: false
-                                                }
-                                            ),
-                                            JSONFormat.Compact
-                                        )
-                                    }
-                                )
+                                Blank()
                             )
                         );
-                        // 明細を作成し、各スロットの予約数を加算する
-                        // ForAll の中では Set が使えないため、作成できた件数で成否を判定する
-                        ForAll(
-                            colHoldSlots As H,
-                            Patch(
-                                予約明細,
-                                Defaults(予約明細),
-                                {
-                                    Title: Text(varSavedRes.ID) & "-" & Text(H.SeqNo),
-                                    ResId: varSavedRes.ID,
-                                    SlotId: H.SlotId,
-                                    DayId: varEntryDayId,
-                                    SlotDate: DateValue(Text(H.StartTime, "yyyy/mm/dd")),
-                                    StartTime: H.StartTime,
-                                    EndTime: H.EndTime,
-                                    HeadCount: hc,
-                                    SeqNo: H.SeqNo
-                                }
-                            );
-                            Patch(
-                                予約枠時間マスタ,
-                                LookUp(予約枠時間マスタ, ID = H.SlotId),
-                                {
-                                    ReservedCount: Coalesce(
-                                        LookUp(予約枠時間マスタ, ID = H.SlotId).ReservedCount,
-                                        0
-                                    ) + hc
-                                }
-                            )
-                        );
-                        Refresh(予約明細);
                         If(
-                            CountRows(Filter(予約明細, ResId = varSavedRes.ID)) < CountRows(colHoldSlots),
-                            // 途中で失敗したときは、作りかけを取り消す
-                            ForAll(
-                                Filter(予約明細, ResId = varSavedRes.ID) As D,
-                                Patch(
-                                    予約枠時間マスタ,
-                                    LookUp(予約枠時間マスタ, ID = D.SlotId),
-                                    {
-                                        ReservedCount: Max(
-                                            Coalesce(
-                                                LookUp(予約枠時間マスタ, ID = D.SlotId).ReservedCount,
-                                                0
-                                            ) - Coalesce(D.HeadCount, 0),
-                                            0
-                                        )
-                                    }
-                                )
-                            );
-                            Remove(予約明細, Filter(予約明細, ResId = varSavedRes.ID));
-                            If(
-                                varEntryMode <> "edit",
-                                Remove(予約リスト, LookUp(予約リスト, ID = varSavedRes.ID))
-                            );
+                            IsBlank(varSavedRes.ID),
                             Notify(
-                                "枠の確保に失敗しました。お手数ですが、もう一度お試しください",
+                                "予約の保存に失敗しました。お手数ですが、もう一度お試しください",
                                 NotificationType.Error
                             ),
-                            // 成功：日枠の満枠スロット数を数え直す
-                            Select(btnSyncFullSlots);
+                            // ---- 明細の作成・ReservedCount の加算・FullSlots の更新はフローで行う ----
+                            // TODO: フロー名と引数の確定後、ここで '（フロー名）'.Run(...) を呼ぶ
                             Notify(
                                 If(
                                     varEntryMode = "edit",
@@ -7282,29 +7240,6 @@ Screens:
                   Text: =""
                   Width: =1
                   X: =1132
-                  Y: =762
-            - btnSyncFullSlots:
-                Control: Classic/Button@2.2.0
-                Properties:
-                  BorderThickness: =0
-                  Fill: =RGBA(0, 0, 0, 0)
-                  Height: =1
-                  OnSelect: |-
-                    =// 対象の日枠に属するスロットを取り直し、満枠になった数を書き戻す
-                    ClearCollect(colDaySlots, Filter(予約枠時間マスタ, DayId = varEntryDayId));
-                    Patch(
-                        予約枠日マスタ,
-                        LookUp(予約枠日マスタ, ID = varEntryDayId),
-                        {
-                            FullSlots: CountRows(
-                                Filter(colDaySlots, ReservedCount >= Capacity)
-                            )
-                        }
-                    )
-                  Text: =""
-                  Visible: =false
-                  Width: =1
-                  X: =1140
                   Y: =762
             - btnPickHistory:
                 Control: Classic/Button@2.2.0
