@@ -6065,41 +6065,42 @@ Screens:
                                   NotificationType.Warning
                               ),
                               // 押さえていた枠をすべて解放し、日枠の満枠スロット数を数え直す
-                          // ForAll の中では Set が使えないため、先に日枠のIDを取得しておく
-                          Set(varRelDayId, First(Filter(予約明細, ResId = varSelRes.ID)).DayId);
-                          ForAll(
-                              Filter(予約明細, ResId = varSelRes.ID) As D,
-                              Patch(
-                                  予約枠時間マスタ,
-                                  LookUp(予約枠時間マスタ, ID = D.SlotId),
-                                  {
-                                      ReservedCount: Max(
-                                          Coalesce(LookUp(予約枠時間マスタ, ID = D.SlotId).ReservedCount, 0) -
-                                              Coalesce(D.HeadCount, 0),
-                                          0
-                                      )
-                                  }
-                              )
-                          );
-                          Remove(予約明細, Filter(予約明細, ResId = varSelRes.ID));
-                          // 履歴として残すため、予約リストは消さず状態だけ変える
-                          Patch(
-                              予約リスト,
-                              LookUp(予約リスト, ID = varSelRes.ID),
-                              {Status: "取り消し"}
-                          );
-                          If(
-                              !IsBlank(varRelDayId),
-                              ClearCollect(colDaySlots, Filter(予約枠時間マスタ, DayId = varRelDayId));
-                              Patch(
-                                  予約枠日マスタ,
-                                  LookUp(予約枠日マスタ, ID = varRelDayId),
-                                  {FullSlots: CountRows(Filter(colDaySlots, ReservedCount >= Capacity))}
-                              )
-                          );
-                          Select(btnAdminReload_UserRes);
-                              Set(varShowResPopup, false);
-                              Notify("予約を取り消ししました（枠を解放しました）", NotificationType.Success)
+                            // ForAll の中では Set が使えないため、先に日枠のIDを取得しておく
+                            /*Set(varRelDayId, First(Filter(予約明細, ResId = varSelRes.ID)).DayId);
+                            ForAll(
+                                Filter(予約明細, ResId = varSelRes.ID) As D,
+                                Patch(
+                                    予約枠時間マスタ,
+                                    LookUp(予約枠時間マスタ, ID = D.SlotId),
+                                    {
+                                        ReservedCount: Max(
+                                            Coalesce(LookUp(予約枠時間マスタ, ID = D.SlotId).ReservedCount, 0) -
+                                                Coalesce(D.HeadCount, 0),
+                                            0
+                                        )
+                                    }
+                                )
+                            );
+                            Remove(予約明細, Filter(予約明細, ResId = varSelRes.ID));*/
+                            // 履歴として残すため、予約リストは消さず状態だけ変える
+                            Patch(
+                                予約リスト,
+                                LookUp(予約リスト, ID = varSelRes.ID),
+                                {Status: "取り消し"}
+                            );
+                            /*If(
+                                !IsBlank(varRelDayId),
+                                ClearCollect(colDaySlots, Filter(予約枠時間マスタ, DayId = varRelDayId));
+                                Patch(
+                                    予約枠日マスタ,
+                                    LookUp(予約枠日マスタ, ID = varRelDayId),
+                                    {FullSlots: CountRows(Filter(colDaySlots, ReservedCount >= Capacity))}
+                                )
+                            );*/
+                            '【新予約システム】予約取消時フロー'.Run(varSelRes.ID);
+                            Select(btnAdminReload_UserRes);
+                            Set(varShowResPopup, false);
+                            Notify("予約を取り消ししました（枠を解放しました）", NotificationType.Success)
                           )
                         Size: =12
                         Text: ="取り消し"
@@ -6928,6 +6929,7 @@ Screens:
                   - lblRemarks_2:
                       Control: Label@2.5.1
                       Properties:
+                        AutoHeight: =true
                         Color: =RGBA(130, 130, 130, 1)
                         Height: |-
                           =// 描画結果ではなく文字数から決めることで、
@@ -7225,13 +7227,38 @@ Screens:
                             ),
                             // ---- 明細の作成・ReservedCount の加算・FullSlots の更新はフローで行う ----
                             // TODO: フロー名と引数の確定後、ここで '（フロー名）'.Run(...) を呼ぶ
-                            Notify(
+                            Set(
+                                varResFlowResult,
                                 If(
                                     varEntryMode = "edit",
-                                    "予約内容を更新しました",
-                                    "予約を申請しました（ステータス：承認待ち）"
+                                    '【新予約システム】予約更新時フロー'.Run(varSavedRes.ID),
+                                    '【新予約システム】予約登録時フロー'.Run(varSavedRes.ID)
+                                ).結果
+                            );
+                            If(
+                                varResFlowResult = "正常",
+                                /*'【新予約システム】予約登録・更新時通知フロー'.Run(
+                                    varSavedRes.ID,
+                                    If(varEntryMode = "new", "登録", "更新")
+                                );*/
+                                Notify(
+                                    If(
+                                        varEntryMode = "edit",
+                                        "予約内容を更新しました",
+                                        "予約を申請しました（ステータス：承認待ち）"
+                                    ),
+                                    NotificationType.Success
                                 ),
-                                NotificationType.Success
+                                varResFlowResult = "予約時間重複",
+                                Notify(
+                                    "予約時間が重複しています。お手数ですが、もう一度予約を取り直してください。",
+                                    NotificationType.Error
+                                ),
+                                varResFlowResult = "人数オーバー",
+                                Notify(
+                                    "予約人数が超過しています。お手数ですが、もう一度予約を取り直してください。",
+                                    NotificationType.Error
+                                )
                             );
                             Set(varEntryMode, "new");
                             Back()
@@ -7261,8 +7288,9 @@ Screens:
                                     Sort(
                                         Filter(
                                             予約リスト,
-                                            氏名 = gblUserInfo.氏名,
+                                            社員番号 = gblUserInfo.社員番号,
                                             Status = "承認待ち",
+                                            Status = "再承認待ち",
                                             Status = "予約確定",
                                             Status = "差し戻し"
                                         ),
