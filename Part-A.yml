@@ -10453,12 +10453,12 @@ Screens:
                         DropShadow: =DropShadow.None
                         FillPortions: =0
                         Height: =If(conSlotFilterBar.Visible, 510, 533)
-                        LayoutMinWidth: =1542
+                        LayoutMinWidth: =1982
                         RadiusBottomLeft: =0
                         RadiusBottomRight: =0
                         RadiusTopLeft: =0
                         RadiusTopRight: =0
-                        Width: =1616
+                        Width: =2056
                       Children:
                         - recListHeadBg:
                             Control: Rectangle@2.3.0
@@ -10476,6 +10476,14 @@ Screens:
                               Text: ="状態"
                               Width: =110
                               X: =16
+                        - lblColId_1:
+                            Control: Label@2.5.1
+                            Properties:
+                              Height: =34
+                              Size: =12
+                              Text: ="ID"
+                              Width: =110
+                              X: =136
                         - lblColDate_1:
                             Control: Label@2.5.1
                             Properties:
@@ -10483,7 +10491,7 @@ Screens:
                               Size: =12
                               Text: ="利用日"
                               Width: =130
-                              X: =136
+                              X: =256
                         - lblColTime_1:
                             Control: Label@2.5.1
                             Properties:
@@ -10491,7 +10499,7 @@ Screens:
                               Size: =12
                               Text: ="開始時間"
                               Width: =110
-                              X: =276
+                              X: =396
                         - lblColFrame_1:
                             Control: Label@2.5.1
                             Properties:
@@ -10499,7 +10507,7 @@ Screens:
                               Size: =12
                               Text: ="予約枠名"
                               Width: =260
-                              X: =396
+                              X: =516
                         - lblColCreated_1:
                             Control: Label@2.5.1
                             Properties:
@@ -10507,7 +10515,7 @@ Screens:
                               Size: =12
                               Text: ="予約登録日時"
                               Width: =160
-                              X: =666
+                              X: =786
                         - lblColOrg_1:
                             Control: Label@2.5.1
                             Properties:
@@ -10515,7 +10523,7 @@ Screens:
                               Size: =12
                               Text: ="所属名"
                               Width: =180
-                              X: =836
+                              X: =956
                         - lblColName_1:
                             Control: Label@2.5.1
                             Properties:
@@ -10523,7 +10531,7 @@ Screens:
                               Size: =12
                               Text: ="予約者氏名"
                               Width: =140
-                              X: =1026
+                              X: =1146
                         - lblColAttend_1:
                             Control: Label@2.5.1
                             Properties:
@@ -10531,7 +10539,7 @@ Screens:
                               Size: =12
                               Text: ="随行社員氏名"
                               Width: =140
-                              X: =1176
+                              X: =1296
                         - lblColJobCode_1:
                             Control: Label@2.5.1
                             Properties:
@@ -10539,7 +10547,7 @@ Screens:
                               Size: =12
                               Text: ="職種コード名称"
                               Width: =140
-                              X: =1326
+                              X: =1446
                         - lblColPostCode_1:
                             Control: Label@2.5.1
                             Properties:
@@ -10547,7 +10555,23 @@ Screens:
                               Size: =12
                               Text: ="役職コード名称"
                               Width: =140
-                              X: =1476
+                              X: =1596
+                        - lblColApprover_1:
+                            Control: Label@2.5.1
+                            Properties:
+                              Height: =34
+                              Size: =12
+                              Text: ="承認者"
+                              Width: =140
+                              X: =1746
+                        - lblColApprovedAt_1:
+                            Control: Label@2.5.1
+                            Properties:
+                              Height: =34
+                              Size: =12
+                              Text: ="承認日時"
+                              Width: =160
+                              X: =1896
                         - galResList_1:
                             Control: Gallery@2.15.0
                             Variant: Vertical
@@ -10596,7 +10620,7 @@ Screens:
                                 Set(varShowResPopup, true)
                               TemplatePadding: =0
                               TemplateSize: =44
-                              Width: =1616
+                              Width: =2056
                               Y: =34
                             Children:
                               - recResRow_1:
@@ -10626,6 +10650,15 @@ Screens:
                                     Text: =ThisItem.Status
                                     Width: =110
                                     X: =16
+                              - lblResId_1:
+                                  Control: Label@2.5.1
+                                  Properties:
+                                    Height: =44
+                                    OnSelect: =Select(Parent)
+                                    Size: =12
+                                    Text: =ThisItem.ID
+                                    Width: =110
+                                    X: =136
                               - lblResDate_1:
                                   Control: Label@2.5.1
                                   Properties:
@@ -10634,7 +10667,7 @@ Screens:
                                     Size: =12
                                     Text: =Text(ThisItem.ResDate, "yyyy/mm/dd")
                                     Width: =130
-                                    X: =136
+                                    X: =256
                               - lblResTime_1:
                                   Control: Label@2.5.1
                                   Properties:
@@ -10649,7 +10682,7 @@ Screens:
                                           Text(ThisItem.EndTime, "HH:mm")
                                       )
                                     Width: =110
-                                    X: =276
+                                    X: =396
                               - lblResFrame_1:
                                   Control: Label@2.5.1
                                   Properties:
@@ -10658,7 +10691,7 @@ Screens:
                                     Size: =12
                                     Text: =ThisItem.FrameName
                                     Width: =260
-                                    X: =396
+                                    X: =516
                               - lblResCreated_1:
                                   Control: Label@2.5.1
                                   Properties:
@@ -10667,7 +10700,7 @@ Screens:
                                     Size: =12
                                     Text: =Text(ThisItem.CreatedAt, "yyyy/mm/dd hh:mm")
                                     Width: =160
-                                    X: =666
+                                    X: =786
                               - lblResOrg_1:
                                   Control: Label@2.5.1
                                   Properties:
@@ -10676,7 +10709,7 @@ Screens:
                                     Size: =12
                                     Text: =ThisItem.組織階層2
                                     Width: =180
-                                    X: =836
+                                    X: =956
                               - lblResName_1:
                                   Control: Label@2.5.1
                                   Properties:
@@ -10685,7 +10718,7 @@ Screens:
                                     Size: =12
                                     Text: =ThisItem.氏名
                                     Width: =140
-                                    X: =1026
+                                    X: =1146
                               - lblResAttend_1:
                                   Control: Label@2.5.1
                                   Properties:
@@ -10694,7 +10727,7 @@ Screens:
                                     Size: =12
                                     Text: =ThisItem.随行社員氏名
                                     Width: =140
-                                    X: =1176
+                                    X: =1296
                               - lblResJobCode_1:
                                   Control: Label@2.5.1
                                   Properties:
@@ -10703,7 +10736,7 @@ Screens:
                                     Size: =12
                                     Text: =ThisItem.組織階層3
                                     Width: =140
-                                    X: =1326
+                                    X: =1446
                               - lblResPostCode_1:
                                   Control: Label@2.5.1
                                   Properties:
@@ -10712,7 +10745,25 @@ Screens:
                                     Size: =12
                                     Text: =ThisItem.役職
                                     Width: =130
-                                    X: =1476
+                                    X: =1596
+                              - lblResApprover_1:
+                                  Control: Label@2.5.1
+                                  Properties:
+                                    Height: =44
+                                    OnSelect: =Select(Parent)
+                                    Size: =12
+                                    Text: =ThisItem.承認者
+                                    Width: =140
+                                    X: =1746
+                              - lblResApprovedAt_1:
+                                  Control: Label@2.5.1
+                                  Properties:
+                                    Height: =44
+                                    OnSelect: =Select(Parent)
+                                    Size: =12
+                                    Text: =Text(ThisItem.承認日時, "yyyy/mm/dd hh:mm")
+                                    Width: =160
+                                    X: =1896
                               - btnResRow_1:
                                   Control: Classic/Button@2.2.0
                                   Properties:
@@ -10783,6 +10834,9 @@ Screens:
                                 組織階層2: R.組織階層2,
                                 組織階層3: R.組織階層3,
                                 役職: R.役職,
+                                // 承認者・承認日時（一覧の列に表示する）
+                                承認者: R.承認者,
+                                承認日時: R.承認日時,
                                 // 回答JSONから随行社員氏名を1回だけ取り出しておく
                                 随行社員氏名: Coalesce(
                                     LookUp(
@@ -12308,9 +12362,9 @@ Screens:
                           // 再描画のたびに高さが揺れるのを防ぐ
                           If(
                               IsBlank(ThisItem.Remarks), 0,
-                              Len(ThisItem.Remarks) > 116, 60,
-                              Len(ThisItem.Remarks) > 58, 40,
-                              22
+                              Len(ThisItem.Remarks) > 116, 80,
+                              Len(ThisItem.Remarks) > 58, 60,
+                              40
                           )
                         Size: =10
                         Text: |-
@@ -12625,10 +12679,10 @@ Screens:
                                     Sort(
                                         Filter(
                                             予約リスト,
-                                            氏名 = gblUserInfo.氏名,
-                                            Status = "承認待ち",
-                                            Status = "再承認待ち",
-                                            Status = "予約確定",
+                                            社員番号 = gblUserInfo.社員番号,
+                                            Status = "承認待ち" ||
+                                            Status = "再承認待ち" ||
+                                            Status = "予約確定" ||
                                             Status = "差し戻し"
                                         ),
                                         StartTime,
