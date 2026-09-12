@@ -5277,6 +5277,7 @@ Screens:
                                     ), "空"),
                                         "予約確定", RGBA(124, 195, 96, 1),
                                         "承認待ち", RGBA(240, 150, 60, 1),
+                                        "再承認待ち", RGBA(240, 150, 60, 1),
                                         "差し戻し", RGBA(232, 62, 140, 1),
                                         RGBA(240, 240, 240, 1)
                                     )
@@ -10839,8 +10840,8 @@ Screens:
                         // 枠で絞り込んでいる間は取り消しを選べないようにする
                         // （取り消し時に予約明細を消すため、枠からは辿れない）
                         IsBlank(varResSlotFilter),
-                        ["すべて", "承認待ち", "予約確定", "差し戻し", "取り消し"],
-                        ["すべて", "承認待ち", "予約確定", "差し戻し"]
+                        ["すべて", "承認待ち", "再承認待ち", "予約確定", "差し戻し", "取り消し"],
+                        ["すべて", "承認待ち", "再承認待ち", "予約確定", "差し戻し"]
                     )
                   Items.Value: =Value
                   OnChange: =Set(varResFilter, Self.Selected.Value)
@@ -10982,7 +10983,7 @@ Screens:
                   Text: |-
                     =If(varResRangeMode = "future", "今日以降", Text(varResMonth, "yyyy年m月")) &
                     " の予約：" & CountRows(Filter(colReservations, Status <> "取り消し")) & " 件" &
-                    "　（承認待ち " & CountRows(Filter(colReservations, Status = "承認待ち")) & " / " &
+                    "　（承認待ち " & CountRows(Filter(colReservations, Status = "承認待ち" || Status = "再承認待ち")) & " / " &
                     "予約確定 " & CountRows(Filter(colReservations, Status = "予約確定")) & " / " &
                     "差し戻し " & CountRows(Filter(colReservations, Status = "差し戻し")) & "）" &
                     "　※行をクリックすると回答内容を表示します"
@@ -11260,10 +11261,21 @@ Screens:
                                               }
                                           ),
                                           JSONFormat.Compact
-                                      )
+                                      ),
+                                      承認者: gblUserInfo.氏名,
+                                      承認日時: Now()
+
                                   }
                               ),
-                              Patch(予約リスト, LookUp(予約リスト, ID = varSelRes.ID), {Status: "予約確定"})
+                              Patch(
+                                予約リスト,
+                                LookUp(予約リスト, ID = varSelRes.ID),
+                                {
+                                    Status: "予約確定",
+                                    承認者: gblUserInfo.氏名,
+                                    承認日時: Now()
+                                }
+                              )
                           );
                           Select(btnAdminReload);
                           Set(varSelRes, LookUp(colReservations, ID = varSelRes.ID));
@@ -12615,6 +12627,7 @@ Screens:
                                             予約リスト,
                                             氏名 = gblUserInfo.氏名,
                                             Status = "承認待ち",
+                                            Status = "再承認待ち",
                                             Status = "予約確定",
                                             Status = "差し戻し"
                                         ),
@@ -12764,6 +12777,7 @@ Screens:
                                     ThisItem.Status,
                                     "予約確定", RGBA(60, 140, 40, 1),
                                     "承認待ち", RGBA(200, 110, 20, 1),
+                                    "再承認待ち", RGBA(200, 110, 20, 1),
                                     "差し戻し", RGBA(200, 40, 90, 1),
                                     RGBA(120, 120, 120, 1)
                                 )

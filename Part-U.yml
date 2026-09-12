@@ -5775,7 +5775,7 @@ Screens:
                   Text: |-
                     =If(varResRangeMode = "future", "今日以降", Text(varResMonth, "yyyy年m月")) &
                     " の予約：" & CountRows(Filter(colReservations, Status <> "取り消し")) & " 件" &
-                    "　（承認待ち " & CountRows(Filter(colReservations, Status = "承認待ち")) & " / " &
+                    "　（承認待ち " & CountRows(Filter(colReservations, Status = "承認待ち" || Status = "再承認待ち")) & " / " &
                     "予約確定 " & CountRows(Filter(colReservations, Status = "予約確定")) & " / " &
                     "差し戻し " & CountRows(Filter(colReservations, Status = "差し戻し")) & "）" &
                     "　※行をクリックすると回答内容を表示します"
@@ -6936,9 +6936,9 @@ Screens:
                           // 再描画のたびに高さが揺れるのを防ぐ
                           If(
                               IsBlank(ThisItem.Remarks), 0,
-                              Len(ThisItem.Remarks) > 116, 60,
-                              Len(ThisItem.Remarks) > 58, 40,
-                              22
+                              Len(ThisItem.Remarks) > 116, 80,
+                              Len(ThisItem.Remarks) > 58, 60,
+                              40
                           )
                         Size: =10
                         Text: |-
@@ -6948,7 +6948,7 @@ Screens:
                               "※ " & ThisItem.Remarks
                           )
                         Visible: =ThisItem.Kind <> "section" && ThisItem.ItemKey <> "fix_manager" && !IsBlank(ThisItem.Remarks)
-                        Width: =520
+                        Width: =Parent.Width
                         X: =If(varEntryMode = "edit" && ThisItem.Kind <> "section", 24, 0)
                         Y: |-
                           =If(
