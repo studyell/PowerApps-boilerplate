@@ -11763,7 +11763,7 @@ Screens:
                     // 予約リストには列を持たず、回答JSONにのみ保存する
                     ItemKey: "fix_manager", Label: "担当課長", Kind: "select",
                     Choices: "[" & Concat(colManager, Char(34) & 氏名 & Char(34), ",") & "]",
-                    Req: true, Hint: "", Value: "",
+                    Req: false, Hint: "", Value: "",
                     Remarks: "", Block: 1, SortNo: 23, Source: "fixed", FieldKey: ""
                 },
                 {
