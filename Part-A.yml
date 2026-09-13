@@ -8839,9 +8839,11 @@ Screens:
                       Properties:
                         Color: |-
                           =If(
-                              Coalesce(ThisItem.ExpandStatus, "未展開") in ["展開中", "展開済み"],
+                              ThisItem.ExpandStatus = "展開済み",
                               RGBA(120, 120, 120, 1),
-                              !ThisItem.IsActive,
+                              ThisItem.ExpandStatus = "展開中",
+                              RGBA(0, 120, 212,1),
+                              !ThisItem.IsActive || ThisItem.ExpandStatus = "展開エラー",
                               RGBA(180, 40, 40, 1),
                               RGBA(40, 40, 40, 1)
                           )
