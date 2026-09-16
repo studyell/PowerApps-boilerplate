@@ -11,7 +11,7 @@ Screens:
       - recSideBg_Ntc:
           Control: Rectangle@2.3.0
           Properties:
-            Fill: =RGBA(255, 255, 255, 1)
+            Fill: =gblSideMenuFill
             Height: =Parent.Height
             Width: =220
       - recSideBorder_Ntc:
@@ -375,7 +375,7 @@ Screens:
       - recSideBg_Cal:
           Control: Rectangle@2.3.0
           Properties:
-            Fill: =RGBA(255, 255, 255, 1)
+            Fill: =gblSideMenuFill
             Height: =Parent.Height
             Width: =220
       - recSideBorder_Cal:
@@ -3891,7 +3891,7 @@ Screens:
       - recSideBg_Cal_LstA:
           Control: Rectangle@2.3.0
           Properties:
-            Fill: =RGBA(255, 255, 255, 1)
+            Fill: =gblSideMenuFill
             Height: =Parent.Height
             Width: =220
       - recSideBorder_Cal_LstA:
@@ -5323,7 +5323,7 @@ Screens:
       - recSideBg_Frm:
           Control: Rectangle@2.3.0
           Properties:
-            Fill: =RGBA(255, 255, 255, 1)
+            Fill: =gblSideMenuFill
             Height: =Parent.Height
             Width: =220
       - recSideBorder_Frm:
@@ -6566,7 +6566,7 @@ Screens:
       - recSideBg_Itm:
           Control: Rectangle@2.3.0
           Properties:
-            Fill: =RGBA(255, 255, 255, 1)
+            Fill: =gblSideMenuFill
             Height: =Parent.Height
             Width: =220
       - recSideBorder_Itm:
@@ -6989,8 +6989,8 @@ Screens:
                 Properties:
                   Height: =32
                   Size: =12
-                  Text: ="選択肢(1行に1つずつ入力)"
-                  Visible: =ddItemKind_1.Selected.Value = "radio" || ddItemKind_1.Selected.Value = "select"
+                  Text: ="選択肢(1行に1つずつ入力。checkbox は複数選択。1つだけでも可)"
+                  Visible: =ddItemKind_1.Selected.Value = "radio" || ddItemKind_1.Selected.Value = "select" || ddItemKind_1.Selected.Value = "checkbox"
                   Width: =260
                   X: =545
                   Y: =306
@@ -7029,10 +7029,31 @@ Screens:
                                     )
                                 ) < 2,
                             Notify("radio / select の場合は選択肢を2行以上入力してください", NotificationType.Error),
+                            // checkbox は選択肢1つでもよい（「承知しました」にレ点を入れるだけの使い方があるため）
+                            ddItemKind_1.Selected.Value = "checkbox"
+                                && CountRows(
+                                    Filter(
+                                        Split(Substitute(txtChoices_1.Text, Char(13), ""), Char(10)),
+                                        !IsBlank(Trim(Value))
+                                    )
+                                ) < 1,
+                            Notify("checkbox の場合は選択肢を1行以上入力してください", NotificationType.Error),
+                            // checkbox の回答はカンマ区切りで保存するため、選択肢にカンマは使えない
+                            ddItemKind_1.Selected.Value = "checkbox"
+                                && CountRows(
+                                    Filter(
+                                        Split(Substitute(txtChoices_1.Text, Char(13), ""), Char(10)),
+                                        !IsBlank(Trim(Value)),
+                                        Trim(Value) <> Substitute(Trim(Value), ",", "")
+                                    )
+                                ) > 0,
+                            Notify("checkbox の選択肢にカンマ（,）は使用できません", NotificationType.Error),
                             With(
                                 {
                                     cj: If(
-                                        ddItemKind_1.Selected.Value = "radio" || ddItemKind_1.Selected.Value = "select",
+                                        ddItemKind_1.Selected.Value = "radio" ||
+                                            ddItemKind_1.Selected.Value = "select" ||
+                                            ddItemKind_1.Selected.Value = "checkbox",
                                         "[" & Concat(
                                             Filter(
                                                 Split(Substitute(txtChoices_1.Text, Char(13), ""), Char(10)),
@@ -7257,7 +7278,7 @@ Screens:
                   HintText: ="あり" & Char(10) & "なし"
                   Mode: =TextMode.MultiLine
                   Size: =12
-                  Visible: =ddItemKind_1.Selected.Value = "radio" || ddItemKind_1.Selected.Value = "select"
+                  Visible: =ddItemKind_1.Selected.Value = "radio" || ddItemKind_1.Selected.Value = "select" || ddItemKind_1.Selected.Value = "checkbox"
                   Width: =300
                   X: =805
                   Y: =302
@@ -7396,7 +7417,7 @@ Screens:
       - recSideBg_Pat:
           Control: Rectangle@2.3.0
           Properties:
-            Fill: =RGBA(255, 255, 255, 1)
+            Fill: =gblSideMenuFill
             Height: =Parent.Height
             Width: =220
       - recSideBorder_Pat:
@@ -8328,7 +8349,7 @@ Screens:
       - recSideBg_Frm_Pre:
           Control: Rectangle@2.3.0
           Properties:
-            Fill: =RGBA(255, 255, 255, 1)
+            Fill: =gblSideMenuFill
             Height: =Parent.Height
             Width: =220
       - recSideBorder_Frm_Pre:
@@ -10171,7 +10192,7 @@ Screens:
       - recSideBg_Adm:
           Control: Rectangle@2.3.0
           Properties:
-            Fill: =RGBA(255, 255, 255, 1)
+            Fill: =gblSideMenuFill
             Height: =Parent.Height
             Width: =220
       - recSideBorder_Adm:
@@ -11264,7 +11285,15 @@ Screens:
                             Properties:
                               Color: =If(IsBlank(ThisItem.Value), RGBA(170, 170, 170, 1), RGBA(40, 40, 40, 1))
                               Height: =56
-                              Text: =If(IsBlank(ThisItem.Value), "（未入力）", ThisItem.Value)
+                              Text: |-
+                                =If(
+                                    IsBlank(ThisItem.Value),
+                                    "（未入力）",
+                                    // 複数選択（checkbox）はカンマ区切りで保存されているため " / " に直して見せる
+                                    ThisItem.Kind = "checkbox",
+                                    Substitute(ThisItem.Value, ",", " / "),
+                                    ThisItem.Value
+                                )
                               Visible: =ThisItem.Kind <> "section"
                               Width: =380
                               X: =284
@@ -11899,7 +11928,7 @@ Screens:
       - recSideBg_Res:
           Control: Rectangle@2.3.0
           Properties:
-            Fill: =RGBA(255, 255, 255, 1)
+            Fill: =gblSideMenuFill
             Height: =Parent.Height
             Width: =220
       - recSideBorder_Res:
@@ -12279,7 +12308,7 @@ Screens:
                         RadioSize: =16
                         Size: =12
                         Visible: =ThisItem.Kind = "radio"
-                        Width: =420
+                        Width: =Parent.Width
                         Y: =32
                   - ddInput_2:
                       Control: Classic/DropDown@2.3.1
@@ -12330,19 +12359,100 @@ Screens:
                         Visible: =ThisItem.Kind = "date"
                         Width: =320
                         Y: =32
-                  - chkInput_2:
-                      Control: Classic/CheckBox@2.1.0
+                  - galMultiCheck_2:
+                      Control: Gallery@2.15.0
+                      Variant: Vertical
                       Properties:
-                        Default: =ThisItem.Value = "はい"
+                        Items: |-
+                          =// 選択肢と「いま選ばれているか」を1つの表にまとめる。
+                          // 入れ子のギャラリーの中からは外側の行（ThisItem）を参照できないため、
+                          // 必要な値はここで内側の表に持たせておく。
+                          ForAll(
+                              Table(ParseJSON(Coalesce(ThisItem.Choices, "[]"))) As C,
+                              {
+                                  // 選択肢の文言
+                                  Choice: Text(C.Value),
+                                  // すでに選ばれているか
+                                  Checked: Text(C.Value) in Split(ThisItem.Value, ",").Value,
+                                  // どの質問の選択肢か（書き戻すときに使う）
+                                  ItemKey: ThisItem.ItemKey,
+                                  // 現在の値（カンマ区切り）
+                                  Cur: ThisItem.Value,
+                                  // 選択肢の定義（並び順を保って組み立て直すために使う）
+                                  ChoicesJson: Coalesce(ThisItem.Choices, "[]"),
+                                  // いま変更できるか（編集モードは「変更する」にチェックが要る）
+                                  CanEdit: varEntryMode <> "edit" || ThisItem.Edited
+                              }
+                          )
                         Height: =If(ThisItem.Kind = "checkbox", 40, 0)
-                        OnCheck: |-
-                          =Patch(colAnswers, ThisItem, {Value: "はい"})
-                        OnUncheck: |-
-                          =Patch(colAnswers, ThisItem, {Value: "いいえ"})
-                        Text: ="はい"
+                        OnSelect: |-
+                          =// 押した選択肢だけ状態を反転させ、選択肢の定義順に並べ直してカンマで結合する
+                          If(
+                              ThisItem.CanEdit,
+                              Patch(
+                                  colAnswers,
+                                  LookUp(colAnswers, ItemKey = ThisItem.ItemKey),
+                                  {
+                                      Value: Concat(
+                                          Filter(
+                                              ForAll(
+                                                  Table(ParseJSON(ThisItem.ChoicesJson)) As C,
+                                                  {V: Text(C.Value)}
+                                              ),
+                                              If(
+                                                  V = ThisItem.Choice,
+                                                  // 押された選択肢は入／切を入れ替える
+                                                  Not(V in Split(ThisItem.Cur, ",").Value),
+                                                  // それ以外は今の状態のまま
+                                                  V in Split(ThisItem.Cur, ",").Value
+                                              )
+                                          ),
+                                          V,
+                                          ","
+                                      )
+                                  }
+                              )
+                          )
+                        TemplatePadding: =0
+                        TemplateSize: =30
                         Visible: =ThisItem.Kind = "checkbox"
-                        Width: =200
+                        Width: =Parent.TemplateWidth - Self.X
+                        WrapCount: =8
+                        X: =If(varEntryMode = "edit" && ThisItem.Kind <> "section", 24, 0)
                         Y: =32
+                      Children:
+                        - recMultiBox_2:
+                            Control: Rectangle@2.3.0
+                            Properties:
+                              BorderColor: =RGBA(120, 130, 145, 1)
+                              BorderThickness: =1
+                              Fill: |-
+                                =If(
+                                    ThisItem.Checked,
+                                    RGBA(0, 120, 212, 1),
+                                    RGBA(255, 255, 255, 1)
+                                )
+                              Height: =14
+                              OnSelect: =Select(Parent)
+                              Width: =14
+                              X: =4
+                              Y: =(Parent.TemplateHeight - Self.Height) / 2
+                        - lblMultiName_2:
+                            Control: Label@2.5.1
+                            Properties:
+                              Color: |-
+                                =If(
+                                    ThisItem.Checked,
+                                    RGBA(0, 90, 180, 1),
+                                    RGBA(70, 70, 70, 1)
+                                )
+                              Height: =30
+                              OnSelect: =Select(Parent)
+                              Size: =11
+                              Text: =ThisItem.Choice
+                              Width: =Parent.TemplateWidth - Self.X
+                              X: =24
+                              Y: =(Parent.TemplateHeight / 2) - (Self.Height / 2)
                   - lblLockedValue:
                       Control: Label@2.5.1
                       Properties:
