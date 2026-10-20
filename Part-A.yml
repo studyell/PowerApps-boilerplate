@@ -11,7 +11,7 @@ Screens:
       - recSideBg_Ntc:
           Control: Rectangle@2.3.0
           Properties:
-            Fill: =gblSideMenuFill
+            Fill: =Coalesce(gblSideMenuFill, RGBA(255, 255, 255, 1))
             Height: =Parent.Height
             Width: =220
       - recSideBorder_Ntc:
@@ -310,7 +310,7 @@ Screens:
         Clear(colCatRadio);
         Collect(
             colCatRadio,
-            ForAll(Distinct(colCategoryAll, カテゴリ) As C, {CategoryName: C.Value})
+            ForAll(Distinct(Sort(colCategoryAll, SortNo, SortOrder.Ascending), カテゴリ) As C, {CategoryName: C.Value })
         );
         Set(varCatFilter, Blank());
         // 中分類の選択状態（列の型を確定させてから空にする）
@@ -403,7 +403,7 @@ Screens:
                     Collect(
                         colSubCatChoices,
                         ForAll(
-                            Filter(colCategoryAll, カテゴリ in colCatSelected.CategoryName) As S,
+                            Sort(Filter(colCategoryAll, カテゴリ in colCatSelected.CategoryName), SortNo, SortOrder.Ascending) As S,
                             {
                                 CatName: S.カテゴリ,
                                 SubName: S.サブカテゴリ,
@@ -611,7 +611,7 @@ Screens:
                             Filter(予約リスト, ResDate >= varStart, ResDate <= varRangeEnd) As R,
                             {
                                 ID: R.ID,
-                                Title: R.Title,
+                                Title: R.予約名,
                                 FrameName: R.FrameName,
                                 PatternName: R.パターン名,
                                 ResDate: DateValue(Text(Coalesce(R.ResDate, Date(2000, 1, 1)), "yyyy/mm/dd")),
@@ -683,7 +683,7 @@ Screens:
                             {
                                 HolId: H.ID,
                                 HolDate: Coalesce(H.HolidayDate, Date(2000, 1, 1)),
-                                HolTitle: H.Title,
+                                HolTitle: H.タイトル,
                                 HolCat: H.Category,
                                 HolSub: H.SubCategory,
                                 HolActive: Coalesce(H.IsActive, true)
@@ -872,7 +872,7 @@ Screens:
                             {
                                 HolId: H.ID,
                                 HolDate: Coalesce(H.HolidayDate, Date(2000, 1, 1)),
-                                HolTitle: H.Title,
+                                HolTitle: H.タイトル,
                                 HolCat: H.Category,
                                 HolSub: H.SubCategory,
                                 HolActive: Coalesce(H.IsActive, true)
@@ -1166,6 +1166,7 @@ Screens:
                                     Text: =ThisItem.Sub2
                                     Visible: =ThisItem.ColN >= 2
                                     Width: =Parent.TemplateWidth / Max(ThisItem.ColN, 1)
+                                    X: =lblColHead1_1.X + lblColHead1_1.Width
                               - lblColHead3_1:
                                   Control: Label@2.5.1
                                   Properties:
@@ -1178,6 +1179,7 @@ Screens:
                                     Text: =ThisItem.Sub3
                                     Visible: =ThisItem.ColN >= 3
                                     Width: =Parent.TemplateWidth / Max(ThisItem.ColN, 1)
+                                    X: =lblColHead2_1.X + lblColHead2_1.Width
                         - galCanvas_1:
                             Control: Gallery@2.15.0
                             Variant: Vertical
@@ -1189,30 +1191,6 @@ Screens:
                               Width: =Parent.Width
                               Y: =gHeadH
                             Children:
-                              - galTicks_1:
-                                  Control: Gallery@2.15.0
-                                  Variant: Vertical
-                                  Properties:
-                                    Height: =gRowH * gSlots
-                                    Items: =colTimeTicks
-                                    ShowScrollbar: =false
-                                    TemplatePadding: =0
-                                    TemplateSize: =gRowH
-                                    Width: =gTimeW
-                                  Children:
-                                    - lblTick_1:
-                                        Control: Label@2.5.1
-                                        Properties:
-                                          Align: =Align.Center
-                                          BorderColor: =RGBA(200, 205, 215, 1)
-                                          BorderThickness: =1
-                                          Color: =RGBA(90, 95, 105, 1)
-                                          Fill: =RGBA(238, 240, 244, 1)
-                                          Height: =gRowH
-                                          Size: =10
-                                          Text: =If(ThisItem.IsHour, ThisItem.Slot, "")
-                                          VerticalAlign: =VerticalAlign.Top
-                                          Width: =gTimeW
                               - galRowLines_1:
                                   Control: Gallery@2.15.0
                                   Variant: Vertical
@@ -1263,6 +1241,7 @@ Screens:
                                           Text: =""
                                           Visible: =ThisItem.ColN >= 2
                                           Width: =Parent.TemplateWidth / Max(ThisItem.ColN, 1)
+                                          X: =lblColLine1_1.X + lblColLine1_1.Width
                                     - lblColLine3_1:
                                         Control: Label@2.5.1
                                         Properties:
@@ -1272,6 +1251,31 @@ Screens:
                                           Text: =""
                                           Visible: =ThisItem.ColN >= 3
                                           Width: =Parent.TemplateWidth / Max(ThisItem.ColN, 1)
+                                          X: =lblColLine2_1.X + lblColLine2_1.Width
+                              - galTicks_1:
+                                  Control: Gallery@2.15.0
+                                  Variant: Vertical
+                                  Properties:
+                                    Height: =gRowH * gSlots
+                                    Items: =colTimeTicks
+                                    ShowScrollbar: =false
+                                    TemplatePadding: =0
+                                    TemplateSize: =gRowH
+                                    Width: =gTimeW
+                                  Children:
+                                    - lblTick_1:
+                                        Control: Label@2.5.1
+                                        Properties:
+                                          Align: =Align.Center
+                                          BorderColor: =RGBA(200, 205, 215, 1)
+                                          BorderThickness: =1
+                                          Color: =RGBA(90, 95, 105, 1)
+                                          Fill: =RGBA(238, 240, 244, 1)
+                                          Height: =gRowH
+                                          Size: =10
+                                          Text: =If(ThisItem.IsHour, ThisItem.Slot, "")
+                                          VerticalAlign: =VerticalAlign.Top
+                                          Width: =gTimeW
                               - galWeekHoliday_1:
                                   Control: Gallery@2.15.0
                                   Variant: Vertical
@@ -1322,10 +1326,10 @@ Screens:
                                           RadiusTopLeft: =4
                                           RadiusTopRight: =4
                                           Size: =11
-                                          X: =ThisItem.PosX + 3
-                                          Y: =ThisItem.PosY + 1 - (ThisItem.RowNum - 1) + 1.5
                                           Text: =ThisItem.HolTitle
                                           Width: =ThisItem.PosW - 6
+                                          X: =ThisItem.PosX + 3
+                                          Y: =ThisItem.PosY + 1 - (ThisItem.RowNum - 1) + 1.5
                               - galWeekSlots_1:
                                   Control: Gallery@2.15.0
                                   Variant: Vertical
@@ -1485,9 +1489,9 @@ Screens:
                                           Size: =9
                                           Text: =ThisItem.TimeLabel & Char(10) & ThisItem.StatusLabel
                                           VerticalAlign: =VerticalAlign.Top
+                                          Width: =ThisItem.PosW - 6
                                           X: =ThisItem.PosX + 3
                                           Y: =ThisItem.PosY + 1 - (ThisItem.RowNum - 1) + 1.5
-                                          Width: =ThisItem.PosW - 6
             - conMonthView_1:
                 Control: GroupContainer@1.5.0
                 Variant: ManualLayout
@@ -3091,7 +3095,7 @@ Screens:
                               OnSelect: =Select(Parent)
                               Size: =11
                               Text: =ThisItem.CategoryName
-                              Width: =88
+                              Width: =Parent.TemplateWidth - Self.X
                               X: =24
                   - lblCatFilterGuide:
                       Control: Label@2.5.1
@@ -3827,7 +3831,7 @@ Screens:
         Clear(colCatRadio);
         Collect(
             colCatRadio,
-            ForAll(Distinct(colCategoryAll, カテゴリ) As C, {CategoryName: C.Value})
+            ForAll(Distinct(Sort(colCategoryAll, SortNo, SortOrder.Ascending), カテゴリ) As C, {CategoryName: C.Value })
         );
         Set(varCatFilter, Blank());
         // 中分類の選択状態（列の型を確定させてから空にする）
@@ -4162,7 +4166,7 @@ Screens:
                     Collect(
                         colSubCatChoices,
                         ForAll(
-                            Filter(colCategoryAll, カテゴリ in colCatSelected.CategoryName) As S,
+                            Sort(Filter(colCategoryAll, カテゴリ in colCatSelected.CategoryName), SortNo, SortOrder.Ascending) As S,
                             {
                                 CatName: S.カテゴリ,
                                 SubName: S.サブカテゴリ,
@@ -4395,7 +4399,7 @@ Screens:
                             Filter(予約リスト, ResDate >= varStart, ResDate <= varRangeEnd) As R,
                             {
                                 ID: R.ID,
-                                Title: R.Title,
+                                Title: R.予約名,
                                 FrameName: R.FrameName,
                                 PatternName: R.パターン名,
                                 ResDate: DateValue(Text(Coalesce(R.ResDate, Date(2000, 1, 1)), "yyyy/mm/dd")),
@@ -4467,7 +4471,7 @@ Screens:
                             {
                                 HolId: H.ID,
                                 HolDate: Coalesce(H.HolidayDate, Date(2000, 1, 1)),
-                                HolTitle: H.Title,
+                                HolTitle: H.タイトル,
                                 HolCat: H.Category,
                                 HolSub: H.SubCategory,
                                 HolActive: Coalesce(H.IsActive, true)
@@ -4547,7 +4551,7 @@ Screens:
                         OnSelect: =Select(Parent)
                         Size: =11
                         Text: =ThisItem.CategoryName
-                        Width: =88
+                        Width: =Parent.TemplateWidth - Self.X
                         X: =24
             - lblSubCatFilterGuide_LstA:
                 Control: Label@2.5.1
@@ -6063,18 +6067,18 @@ Screens:
                 Properties:
                   DropShadow: =DropShadow.Bold
                   Fill: =RGBA(255, 255, 255, 1)
-                  Height: =570
+                  Height: =505 - If(varSelDay.FrameType = "時間単位", 0, 80)
                   Visible: =varShowSlotEdit
-                  Width: =520
-                  X: =(Parent.Width - 520) / 2
-                  Y: =140
+                  Width: =600
+                  X: =(Parent.Width - Self.Width) / 2
+                  Y: =(Parent.Height - Self.Height) / 2
                 Children:
                   - recSlotEditHead:
                       Control: Rectangle@2.3.0
                       Properties:
                         Fill: =RGBA(0, 120, 212, 1)
                         Height: =46
-                        Width: =520
+                        Width: =Parent.Width
                   - lblSlotEditTitle:
                       Control: Label@2.5.1
                       Properties:
@@ -6091,16 +6095,17 @@ Screens:
                         BorderThickness: =0
                         Color: =RGBA(255, 255, 255, 1)
                         Fill: =RGBA(0, 0, 0, 0)
-                        Height: =34
+                        Height: =36
                         HoverFill: =RGBA(255, 255, 255, 0.2)
                         OnSelect: =Set(varShowSlotEdit, false)
                         Text: ="✕"
                         Width: =36
-                        X: =472
-                        Y: =6
+                        X: =Parent.Width - Self.Width - Self.Y
+                        Y: =(recSlotEditHead.Height - Self.Height) / 2
                   - lblSlotEditHeader:
                       Control: Label@2.5.1
                       Properties:
+                        AutoHeight: =true
                         Color: =RGBA(90, 90, 90, 1)
                         Height: =44
                         Size: =11
@@ -6113,205 +6118,9 @@ Screens:
                           "入力パターン：" & Coalesce(varSelSlot.PatternName, "－") &
                           "（展開時に確定するため変更できません）"
                         VerticalAlign: =VerticalAlign.Top
-                        Width: =472
+                        Width: =Parent.Width - (Self.X * 2)
                         X: =24
                         Y: =56
-                  - lblSlotEditTimeGuide:
-                      Control: Label@2.5.1
-                      Properties:
-                        Size: =12
-                        Text: ="実施時間"
-                        Visible: =Coalesce(varSelDay.FrameType, "時間単位") = "時間単位"
-                        Width: =120
-                        X: =24
-                        Y: =112
-                  - ddSlotStartHour:
-                      Control: Classic/DropDown@2.3.1
-                      Properties:
-                        Default: =varSlotSH
-                        Items: =colHoursFrm
-                        Items.Value: =HourVal
-                        OnChange: =Set(varSlotSH, Self.Selected.HourVal)
-                        Visible: =Coalesce(varSelDay.FrameType, "時間単位") = "時間単位"
-                        Width: =70
-                        X: =150
-                        Y: =112
-                  - ddSlotStartMinute:
-                      Control: Classic/DropDown@2.3.1
-                      Properties:
-                        Default: =varSlotSM
-                        Items: =colMinutes30Frm
-                        Items.Value: =MinVal
-                        OnChange: =Set(varSlotSM, Self.Selected.MinVal)
-                        Visible: =Coalesce(varSelDay.FrameType, "時間単位") = "時間単位"
-                        Width: =70
-                        X: =226
-                        Y: =112
-                  - lblSlotEditTimeTo:
-                      Control: Label@2.5.1
-                      Properties:
-                        Align: =Align.Center
-                        Size: =12
-                        Text: ="～"
-                        Visible: =Coalesce(varSelDay.FrameType, "時間単位") = "時間単位"
-                        Width: =30
-                        X: =300
-                        Y: =112
-                  - ddSlotEndHour:
-                      Control: Classic/DropDown@2.3.1
-                      Properties:
-                        Default: =varSlotEH
-                        Items: =colHoursFrm
-                        Items.Value: =HourVal
-                        OnChange: =Set(varSlotEH, Self.Selected.HourVal)
-                        Visible: =Coalesce(varSelDay.FrameType, "時間単位") = "時間単位"
-                        Width: =70
-                        X: =334
-                        Y: =112
-                  - ddSlotEndMinute:
-                      Control: Classic/DropDown@2.3.1
-                      Properties:
-                        Default: =varSlotEM
-                        Items: =colMinutes30Frm
-                        Items.Value: =MinVal
-                        OnChange: =Set(varSlotEM, Self.Selected.MinVal)
-                        Visible: =Coalesce(varSelDay.FrameType, "時間単位") = "時間単位"
-                        Width: =70
-                        X: =410
-                        Y: =112
-                  - lblSlotEditCapGuide:
-                      Control: Label@2.5.1
-                      Properties:
-                        Size: =12
-                        Text: ="枠上限数"
-                        Width: =120
-                        X: =24
-                        Y: =164
-                  - txtSlotCapacity:
-                      Control: Classic/TextInput@2.3.2
-                      Properties:
-                        Default: =varSlotCapV
-                        Format: =TextFormat.Number
-                        HintText: ="1"
-                        Width: =90
-                        X: =150
-                        Y: =164
-                  - lblSlotEditCapUnit:
-                      Control: Label@2.5.1
-                      Properties:
-                        Size: =12
-                        Text: ="名　（現在の予約数 " & Coalesce(Text(varSelSlot.ReservedCount), "0") & " 名）"
-                        Width: =240
-                        X: =248
-                        Y: =164
-                  - lblSlotEditPubGuide:
-                      Control: Label@2.5.1
-                      Properties:
-                        Size: =12
-                        Text: ="公開日"
-                        Width: =120
-                        X: =24
-                        Y: =216
-                  - dpSlotPublishDate:
-                      Control: Classic/DatePicker@2.6.0
-                      Properties:
-                        DefaultDate: =varSlotPubDate
-                        OnChange: =Set(varSlotPubDate, Self.SelectedDate)
-                        Size: =12
-                        Width: =150
-                        X: =150
-                        Y: =216
-                  - ddSlotPublishHour:
-                      Control: Classic/DropDown@2.3.1
-                      Properties:
-                        Default: =varSlotPubHour
-                        Items: =colHoursFrm
-                        Items.Value: =HourVal
-                        OnChange: =Set(varSlotPubHour, Self.Selected.HourVal)
-                        Width: =70
-                        X: =310
-                        Y: =216
-                  - ddSlotPublishMinute:
-                      Control: Classic/DropDown@2.3.1
-                      Properties:
-                        Default: =varSlotPubMin
-                        Items: =colMinutesFrm
-                        Items.Value: =MinVal
-                        OnChange: =Set(varSlotPubMin, Self.Selected.MinVal)
-                        Width: =70
-                        X: =386
-                        Y: =216
-                  - lblSlotEditPubNote:
-                      Control: Label@2.5.1
-                      Properties:
-                        Color: =RGBA(120, 120, 120, 1)
-                        Size: =10
-                        Text: ="公開日を変えると、この日の枠の表示開始日も最も早い公開日に合わせて更新されます"
-                        Width: =472
-                        X: =24
-                        Y: =262
-                  - lblSlotEditCloseGuide:
-                      Control: Label@2.5.1
-                      Properties:
-                        Size: =12
-                        Text: ="受付期限"
-                        Width: =120
-                        X: =24
-                        Y: =294
-                  - txtSlotCloseDays:
-                      Control: Classic/TextInput@2.3.2
-                      Properties:
-                        Default: =varSlotCloseDaysV
-                        Format: =TextFormat.Number
-                        HintText: ="0"
-                        Width: =90
-                        X: =150
-                        Y: =294
-                  - lblSlotEditCloseUnit:
-                      Control: Label@2.5.1
-                      Properties:
-                        Color: =RGBA(110, 110, 110, 1)
-                        Size: =11
-                        Text: |-
-                          ="日前まで受付　（" &
-                          Text(
-                              DateAdd(varSelDay.SlotDate, -Max(Value(txtSlotCloseDays.Text), 0), TimeUnit.Days),
-                              "yyyy/mm/dd"
-                          ) & " まで）"
-                        Width: =240
-                        X: =248
-                        Y: =294
-                  - lblSlotEditLimitGuide:
-                      Control: Label@2.5.1
-                      Properties:
-                        Size: =12
-                        Text: ="更新期限"
-                        Width: =120
-                        X: =24
-                        Y: =346
-                  - txtSlotEditDays:
-                      Control: Classic/TextInput@2.3.2
-                      Properties:
-                        Default: =varSlotEditDaysV
-                        Format: =TextFormat.Number
-                        HintText: ="0"
-                        Width: =90
-                        X: =150
-                        Y: =346
-                  - lblSlotEditLimitUnit:
-                      Control: Label@2.5.1
-                      Properties:
-                        Color: =RGBA(110, 110, 110, 1)
-                        Size: =11
-                        Text: |-
-                          ="日前まで変更可　（" &
-                          Text(
-                              DateAdd(varSelDay.SlotDate, -Max(Value(txtSlotEditDays.Text), 0), TimeUnit.Days),
-                              "yyyy/mm/dd"
-                          ) & " まで）"
-                        Width: =240
-                        X: =248
-                        Y: =346
                   - btnSlotSave:
                       Control: Classic/Button@2.2.0
                       Properties:
@@ -6387,8 +6196,8 @@ Screens:
                         Size: =12
                         Text: ="保存する"
                         Width: =140
-                        X: =230
-                        Y: =500
+                        X: =332
+                        Y: =446 - If(varSelDay.FrameType = "時間単位", 0, 80)
                   - btnSlotDelete:
                       Control: Classic/Button@2.2.0
                       Properties:
@@ -6405,7 +6214,7 @@ Screens:
                         Text: ="この枠を削除"
                         Width: =120
                         X: =24
-                        Y: =500
+                        Y: =446 - If(varSelDay.FrameType = "時間単位", 0, 80)
                   - btnSlotEditCancel:
                       Control: Classic/Button@2.2.0
                       Properties:
@@ -6419,8 +6228,238 @@ Screens:
                         Size: =12
                         Text: ="閉じる"
                         Width: =100
-                        X: =380
-                        Y: =500
+                        X: =482
+                        Y: =446 - If(varSelDay.FrameType = "時間単位", 0, 80)
+                  - conSlotEditPanel:
+                      Control: GroupContainer@1.5.0
+                      Variant: ManualLayout
+                      Properties:
+                        BorderColor: =RGBA(0, 0, 0, 0)
+                        BorderStyle: =BorderStyle.None
+                        DropShadow: =DropShadow.None
+                        Height: =301 - If(varSelDay.FrameType = "時間単位", 0, 55)
+                        RadiusBottomLeft: =0
+                        RadiusBottomRight: =0
+                        RadiusTopLeft: =0
+                        RadiusTopRight: =0
+                        Width: =Parent.Width - (Self.X * 2)
+                        X: =24
+                        Y: =lblSlotEditHeader.Y + lblSlotEditHeader.Height
+                      Children:
+                        - lblSlotEditTimeGuide:
+                            Control: Label@2.5.1
+                            Properties:
+                              Size: =12
+                              Text: ="実施時間"
+                              Visible: =Coalesce(varSelDay.FrameType, "時間単位") = "時間単位"
+                              Width: =120
+                              Y: =10
+                        - ddSlotStartHour:
+                            Control: Classic/DropDown@2.3.1
+                            Properties:
+                              BorderThickness: =1
+                              Default: =varSlotSH
+                              Items: =colHoursFrm
+                              Items.Value: =HourVal
+                              OnChange: =Set(varSlotSH, Self.Selected.HourVal)
+                              Visible: =Coalesce(varSelDay.FrameType, "時間単位") = "時間単位"
+                              Width: =70
+                              X: =126
+                              Y: =10
+                        - ddSlotStartMinute:
+                            Control: Classic/DropDown@2.3.1
+                            Properties:
+                              BorderThickness: =1
+                              Default: =varSlotSM
+                              Items: =colMinutes30Frm
+                              Items.Value: =MinVal
+                              OnChange: =Set(varSlotSM, Self.Selected.MinVal)
+                              Visible: =Coalesce(varSelDay.FrameType, "時間単位") = "時間単位"
+                              Width: =70
+                              X: =216
+                              Y: =10
+                        - lblSlotEditTimeTo:
+                            Control: Label@2.5.1
+                            Properties:
+                              Align: =Align.Center
+                              Size: =12
+                              Text: ="～"
+                              Visible: =Coalesce(varSelDay.FrameType, "時間単位") = "時間単位"
+                              Width: =35
+                              X: =286
+                              Y: =10
+                        - ddSlotEndHour:
+                            Control: Classic/DropDown@2.3.1
+                            Properties:
+                              BorderThickness: =1
+                              Default: =varSlotEH
+                              Items: =colHoursFrm
+                              Items.Value: =HourVal
+                              OnChange: =Set(varSlotEH, Self.Selected.HourVal)
+                              Visible: =Coalesce(varSelDay.FrameType, "時間単位") = "時間単位"
+                              Width: =70
+                              X: =321
+                              Y: =10
+                        - ddSlotEndMinute:
+                            Control: Classic/DropDown@2.3.1
+                            Properties:
+                              BorderThickness: =1
+                              Default: =varSlotEM
+                              Items: =colMinutes30Frm
+                              Items.Value: =MinVal
+                              OnChange: =Set(varSlotEM, Self.Selected.MinVal)
+                              Visible: =Coalesce(varSelDay.FrameType, "時間単位") = "時間単位"
+                              Width: =70
+                              X: =411
+                              Y: =10
+                        - lblSlotEditCapGuide:
+                            Control: Label@2.5.1
+                            Properties:
+                              Size: =12
+                              Text: ="枠上限数"
+                              Width: =120
+                              Y: =65 - If(varSelDay.FrameType = "時間単位", 0, 55)
+                        - txtSlotCapacity:
+                            Control: Classic/TextInput@2.3.2
+                            Properties:
+                              BorderThickness: =1
+                              Default: =varSlotCapV
+                              Format: =TextFormat.Number
+                              HintText: ="1"
+                              Width: =90
+                              X: =126
+                              Y: =65 - If(varSelDay.FrameType = "時間単位", 0, 55)
+                        - lblSlotEditCapUnit:
+                            Control: Label@2.5.1
+                            Properties:
+                              Size: =12
+                              Text: ="名　（現在の予約数 " & Coalesce(Text(varSelSlot.ReservedCount), "0") & " 名）"
+                              Width: =240
+                              X: =225
+                              Y: =65 - If(varSelDay.FrameType = "時間単位", 0, 55)
+                        - lblSlotEditPubGuide:
+                            Control: Label@2.5.1
+                            Properties:
+                              Size: =12
+                              Text: ="公開日"
+                              Width: =120
+                              Y: =120 - If(varSelDay.FrameType = "時間単位", 0, 55)
+                        - dpSlotPublishDate:
+                            Control: Classic/DatePicker@2.6.0
+                            Properties:
+                              DefaultDate: =varSlotPubDate
+                              OnChange: =Set(varSlotPubDate, Self.SelectedDate)
+                              Size: =12
+                              Width: =175
+                              X: =126
+                              Y: =120 - If(varSelDay.FrameType = "時間単位", 0, 55)
+                        - ddSlotPublishHour:
+                            Control: Classic/DropDown@2.3.1
+                            Properties:
+                              Default: =varSlotPubHour
+                              Items: =colHoursFrm
+                              Items.Value: =HourVal
+                              OnChange: =Set(varSlotPubHour, Self.Selected.HourVal)
+                              Width: =70
+                              X: =316
+                              Y: =120 - If(varSelDay.FrameType = "時間単位", 0, 55)
+                        - ddSlotPublishMinute:
+                            Control: Classic/DropDown@2.3.1
+                            Properties:
+                              Default: =varSlotPubMin
+                              Items: =colMinutesFrm
+                              Items.Value: =MinVal
+                              OnChange: =Set(varSlotPubMin, Self.Selected.MinVal)
+                              Width: =70
+                              X: =392
+                              Y: =120 - If(varSelDay.FrameType = "時間単位", 0, 55)
+                        - lblSlotEditPubNote:
+                            Control: Label@2.5.1
+                            Properties:
+                              Color: =RGBA(120, 120, 120, 1)
+                              Height: =22
+                              Size: =10
+                              Text: ="※公開日を変えると、この日の枠の表示開始日も最も早い公開日に合わせて更新されます"
+                              Width: =Parent.Width
+                              Y: =162 - If(varSelDay.FrameType = "時間単位", 0, 55)
+                        - lblSlotEditCloseGuide:
+                            Control: Label@2.5.1
+                            Properties:
+                              Size: =12
+                              Text: ="受付期限"
+                              Width: =120
+                              Y: =195 - If(varSelDay.FrameType = "時間単位", 0, 55)
+                        - txtSlotCloseDays:
+                            Control: Classic/TextInput@2.3.2
+                            Properties:
+                              Default: =varSlotCloseDaysV
+                              Format: =TextFormat.Number
+                              HintText: ="0"
+                              Width: =90
+                              X: =126
+                              Y: =195 - If(varSelDay.FrameType = "時間単位", 0, 55)
+                        - lblSlotEditCloseUnit:
+                            Control: Label@2.5.1
+                            Properties:
+                              Color: =RGBA(110, 110, 110, 1)
+                              Size: =11
+                              Text: |-
+                                ="日前まで（" &
+                                Text(
+                                    DateAdd(varSelDay.SlotDate, -Max(Value(txtSlotCloseDays.Text), 0), TimeUnit.Days),
+                                    "yyyy/mm/dd"
+                                ) & " まで）"
+                              Width: =240
+                              X: =225
+                              Y: =195 - If(varSelDay.FrameType = "時間単位", 0, 55)
+                        - lblSlotEditLimitGuide:
+                            Control: Label@2.5.1
+                            Properties:
+                              Size: =12
+                              Text: ="更新期限"
+                              Width: =120
+                              Y: =250 - If(varSelDay.FrameType = "時間単位", 0, 55)
+                        - txtSlotEditDays:
+                            Control: Classic/TextInput@2.3.2
+                            Properties:
+                              Default: =varSlotEditDaysV
+                              Format: =TextFormat.Number
+                              HintText: ="0"
+                              Width: =90
+                              X: =126
+                              Y: =250 - If(varSelDay.FrameType = "時間単位", 0, 55)
+                        - lblSlotEditLimitUnit:
+                            Control: Label@2.5.1
+                            Properties:
+                              Color: =RGBA(110, 110, 110, 1)
+                              Size: =11
+                              Text: |-
+                                ="日前まで（" &
+                                Text(
+                                    DateAdd(varSelDay.SlotDate, -Max(Value(txtSlotEditDays.Text), 0), TimeUnit.Days),
+                                    "yyyy/mm/dd"
+                                ) & " まで）"
+                              Width: =256
+                              X: =225
+                              Y: =250 - If(varSelDay.FrameType = "時間単位", 0, 55)
+                        - lblStartColon_Pre_1:
+                            Control: Label@2.5.1
+                            Properties:
+                              Align: =Align.Center
+                              Text: =":"
+                              Visible: =Coalesce(varSelDay.FrameType, "時間単位") = "時間単位"
+                              Width: =20
+                              X: =196
+                              Y: =10
+                        - lblStartColon_Pre_2:
+                            Control: Label@2.5.1
+                            Properties:
+                              Align: =Align.Center
+                              Text: =":"
+                              Visible: =Coalesce(varSelDay.FrameType, "時間単位") = "時間単位"
+                              Width: =20
+                              X: =391
+                              Y: =10
             - recSlotConfirmOverlay:
                 Control: Rectangle@2.3.0
                 Properties:
@@ -6987,7 +7026,7 @@ Screens:
             - lblChoicesGuide_1:
                 Control: Label@2.5.1
                 Properties:
-                  Height: =32
+                  Height: =80
                   Size: =12
                   Text: ="選択肢(1行に1つずつ入力。checkbox は複数選択。1つだけでも可)"
                   Visible: =ddItemKind_1.Selected.Value = "radio" || ddItemKind_1.Selected.Value = "select" || ddItemKind_1.Selected.Value = "checkbox"
@@ -7707,30 +7746,66 @@ Screens:
                     =Set(varEditName, Self.Selected.パターン名);
                     Reset(txtPatternName_1);
                     With(
-                        {t: Table(ParseJSON(Coalesce(LookUp(パターンマスタ, パターン名 = Self.Selected.パターン名).構成JSON, "[]")))},
-                        ClearCollect(
-                            colPatternDef,
-                            ForAll(
-                                Sequence(CountRows(t)),
-                                With(
-                                    {idx: Value},
+                        {
+                            patternRec:LookUp(パターンマスタ, パターン名 = Self.Selected.パターン名)
+                        },
+                        With(
+                            {
+                                // 構成JSON
+                                patternTable:
+                                    ForAll(
+                                        Table(
+                                            ParseJSON(Coalesce(patternRec.構成JSON, "[]"))
+                                        ) As J,
+                                        {
+                                            id: Text(J.Value.id),
+                                            kind: Text(J.Value.kind),
+                                            choices: Text(J.Value.choices),
+                                            req: Coalesce(Boolean(J.Value.req), false),
+                                            note: Text(J.Value.note)
+                                        }
+                                    ),
+                                // 備考JSON
+                                remarksTable:
+                                    ForAll(
+                                        Table(
+                                            ParseJSON(Coalesce(patternRec.備考JSON, "[]"))
+                                        ) As J,
+                                        {
+                                            id: Text(J.Value.id),
+                                            remarks: Text(J.Value.remarks)
+                                        }
+                                    )
+                            },
+                            ClearCollect(
+                                colPatternDef,
+                                ForAll(
+                                    Sequence(CountRows(patternTable)) As S,
                                     With(
-                                        {r: Index(t, idx).Value},
+                                        {
+                                            p: Index(patternTable, S.Value)
+                                        },
                                         With(
-                                            {m: LookUp(項目マスタ, 項目ラベル = Text(r.id))},
                                             {
-                                                ItemKey: Text(r.id),
-                                                // 種別と選択肢は構成JSONのスナップショットを正とする
-                                                Label: Text(r.id),
-                                                Kind: Coalesce(Text(r.kind), Coalesce(m.項目種別, "text")),
-                                                Choices: Coalesce(Text(r.choices), Coalesce(m.選択肢, "[]")),
-                                                Req: Coalesce(Boolean(r.req), false),
-                                                Note: Text(r.note),
-                                                Remarks: Text(r.remarks),
-                                                // 項目マスタから削除された項目は一覧で見分けられるようにする
-                                                IsOrphan: IsBlank(m.項目ラベル),
-                                                SortNo: idx
-                                            }
+                                                itemLabe: p.id
+                                            },
+                                            With(
+                                                {
+                                                    m: LookUp(項目マスタ, 項目ラベル = itemLabe),
+                                                    rm: LookUp(remarksTable, id = itemLabe)
+                                                },
+                                                {
+                                                    ItemKey: itemLabe,
+                                                    Label: itemLabe,
+                                                    Kind: Coalesce(p.kind, m.項目種別, "text"),
+                                                    Choices: Coalesce(p.choices, m.選択肢, "[]"),
+                                                    Req: p.req,
+                                                    Note: p.note,
+                                                    Remarks: Coalesce(rm.remarks, ""),
+                                                    IsOrphan: IsBlank(m.項目ラベル),
+                                                    SortNo: S.Value
+                                                }
+                                            )
                                         )
                                     )
                                 )
@@ -7927,7 +8002,8 @@ Screens:
                   Height: =496
                   Items: =SortByColumns(colPatternDef, "SortNo")
                   TemplatePadding: =2
-                  TemplateSize: =128
+                  TemplateSize: =90
+                  Width: =658
                   X: =454
                   Y: =163
                 Children:
@@ -7937,13 +8013,13 @@ Screens:
                         Color: =If(ThisItem.IsOrphan, RGBA(180, 40, 40, 1), RGBA(40, 40, 40, 1))
                         Fill: =If(ThisItem.Kind = "section", RGBA(230, 241, 251, 1), RGBA(0, 0, 0, 0))
                         FontWeight: =If(ThisItem.Kind = "section", FontWeight.Semibold, FontWeight.Normal)
-                        Height: =32
+                        Height: =35
                         Text: |-
                           =ThisItem.Label & If(ThisItem.Kind = "section", "(見出し)", "") &
                           If(ThisItem.IsOrphan, "　（マスタ削除済み）", "")
-                        Width: =380
+                        Width: =500
                         X: =4
-                        Y: =4
+                        Y: =6
                   - btnUp_1:
                       Control: Classic/Button@2.2.0
                       Properties:
@@ -7965,7 +8041,7 @@ Screens:
                           )
                         Text: ="↑"
                         Width: =35
-                        X: =501
+                        X: =526
                         Y: =6
                   - btnDown_1:
                       Control: Classic/Button@2.2.0
@@ -7988,7 +8064,7 @@ Screens:
                           )
                         Text: ="↓"
                         Width: =35
-                        X: =543
+                        X: =568
                         Y: =6
                   - btnDelItem_1:
                       Control: Classic/Button@2.2.0
@@ -7997,7 +8073,7 @@ Screens:
                         OnSelect: =Remove(colPatternDef, ThisItem)
                         Text: ="×"
                         Width: =35
-                        X: =585
+                        X: =610
                         Y: =6
                   - chkSelReq_1:
                       Control: Classic/CheckBox@2.1.0
@@ -8012,7 +8088,7 @@ Screens:
                         Visible: =ThisItem.Kind <> "section"
                         Width: =100
                         X: =4
-                        Y: =44
+                        Y: =47
                   - txtSelNote_1:
                       Control: Classic/TextInput@2.3.2
                       Properties:
@@ -8027,24 +8103,35 @@ Screens:
                         Visible: |-
                           =ThisItem.Kind = "text" || ThisItem.Kind = "number" ||
                           ThisItem.Kind = "textarea"
-                        Width: =330
-                        X: =120
-                        Y: =44
-                  - txtSelRemarks_1:
-                      Control: Classic/TextInput@2.3.2
+                        Width: =325
+                        X: =100
+                        Y: =47
+                  - btnRemarksPopup:
+                      Control: ModernButton@1.0.0
                       Properties:
-                        BorderThickness: =1
-                        Default: =ThisItem.Remarks
-                        FocusedBorderThickness: =2
+                        AccessibleLabel: =
+                        Align: =Align.Center
+                        BasePaletteColor: =If(IsBlank(ThisItem.Remarks), App.Theme.Colors.Primary, RGBA(255, 0, 45, 1))
+                        Color: =RGBA(255, 255, 255, 1)
+                        FontWeight: =FontWeight.Bold
                         Height: =36
-                        HintText: ="備考（入力欄の下に表示・任意）"
-                        OnChange: |-
-                          =Patch(colPatternDef, ThisItem, {Remarks: Self.Text})
-                        Size: =12
+                        Icon: =false
+                        IconStyle: =IconStyle.Filled
+                        OnSelect: |-
+                          =Set(varShowRemarksEdit, true);
+                          Set(varSelectedItemKey, ThisItem.ItemKey);
+                        RadiusBottomLeft: =10
+                        RadiusBottomRight: =10
+                        RadiusTopLeft: =10
+                        RadiusTopRight: =10
+                        Size: =16
+                        Text: ="備考"
+                        Tooltip: ="備考を追加"
+                        VerticalAlign: =VerticalAlign.Middle
                         Visible: =ThisItem.Kind <> "section"
-                        Width: =446
-                        X: =4
-                        Y: =84
+                        Width: =63
+                        X: =441
+                        Y: =47
             - btnSavePattern_1:
                 Control: Classic/Button@2.2.0
                 Properties:
@@ -8053,15 +8140,32 @@ Screens:
                   OnSelect: |-
                     =With(
                         {
+                            // 構成JSON
                             cfg: JSON(
                                 ForAll(
-                                    SortByColumns(colPatternDef, "SortNo"),
+                                    SortByColumns(
+                                        colPatternDef,
+                                        "SortNo"
+                                    ),
                                     {
                                         id: ItemKey,
                                         kind: Kind,
                                         choices: Choices,
                                         req: Req,
-                                        note: Note,
+                                        note: Note
+                                    }
+                                ),
+                                JSONFormat.Compact
+                            ),
+                            // 備考JSON
+                            rm: JSON(
+                                ForAll(
+                                    SortByColumns(
+                                        colPatternDef,
+                                        "SortNo"
+                                    ),
+                                    {
+                                        id: ItemKey,
                                         remarks: Remarks
                                     }
                                 ),
@@ -8069,12 +8173,30 @@ Screens:
                             )
                         },
                         With(
-                            {existing: LookUp(パターンマスタ, パターン名 = txtPatternName_1.Text)},
+                            {
+                                existing: LookUp(パターンマスタ, パターン名 = txtPatternName_1.Text)
+                            },
                             If(
                                 IsBlank(existing),
-                                Patch(パターンマスタ, Defaults(パターンマスタ), {パターン名: txtPatternName_1.Text, 有効: true, 構成JSON: cfg});
+                                Patch(
+                                    パターンマスタ,
+                                    Defaults(パターンマスタ),
+                                    {
+                                        パターン名: txtPatternName_1.Text,
+                                        有効: true,
+                                        構成JSON: cfg,
+                                        備考JSON: rm
+                                    }
+                                );
                                 Notify("新規パターン「" & txtPatternName_1.Text & "」を保存しました", NotificationType.Success),
-                                Patch(パターンマスタ, existing, {構成JSON: cfg});
+                                Patch(
+                                    パターンマスタ,
+                                    existing,
+                                    {
+                                        構成JSON: cfg,
+                                        備考JSON: rm
+                                    }
+                                );
                                 Notify("パターン「" & txtPatternName_1.Text & "」を更新しました", NotificationType.Success)
                             )
                         )
@@ -8171,6 +8293,103 @@ Screens:
                   Width: =180
                   X: =690
                   Y: =685
+            - recRemarksEditOverlay:
+                Control: Rectangle@2.3.0
+                Properties:
+                  Fill: =RGBA(0, 0, 0, 0.4)
+                  Height: =Parent.Height
+                  OnSelect: =Set(varShowRemarksEdit, false)
+                  Visible: =varShowRemarksEdit
+                  Width: =Parent.Width
+            - conRemarksEdit:
+                Control: GroupContainer@1.5.0
+                Variant: ManualLayout
+                Properties:
+                  DropShadow: =DropShadow.Bold
+                  Fill: =RGBA(255, 255, 255, 1)
+                  Height: =600
+                  Visible: =varShowRemarksEdit
+                  Width: =900
+                  X: =(Parent.Width - Self.Width) / 2
+                  Y: =(Parent.Height - Self.Height) / 2
+                Children:
+                  - recRemarksEditHead:
+                      Control: Rectangle@2.3.0
+                      Properties:
+                        Fill: =RGBA(0, 120, 212, 1)
+                        Height: =46
+                        Width: =Parent.Width
+                  - lblRemarksEditTitle:
+                      Control: Label@2.5.1
+                      Properties:
+                        Color: =RGBA(255, 255, 255, 1)
+                        FontWeight: =FontWeight.Semibold
+                        Height: =46
+                        Size: =14
+                        Text: ="備考の編集 - " & LookUp(colPatternDef, ItemKey = varSelectedItemKey).Label
+                        Width: =831
+                        X: =16
+                  - btnRemarksEditCloseX:
+                      Control: Classic/Button@2.2.0
+                      Properties:
+                        BorderThickness: =0
+                        Color: =RGBA(255, 255, 255, 1)
+                        Fill: =RGBA(0, 0, 0, 0)
+                        Height: =36
+                        HoverFill: =RGBA(255, 255, 255, 0.2)
+                        OnSelect: =Set(varShowRemarksEdit, false)
+                        Text: ="✕"
+                        Width: =36
+                        X: =Parent.Width - Self.Width - Self.Y
+                        Y: =(recRemarksEditHead.Height - Self.Height) / 2
+                  - btnRemarksSave:
+                      Control: Classic/Button@2.2.0
+                      Properties:
+                        BorderThickness: =0
+                        Color: =RGBA(255, 255, 255, 1)
+                        Fill: =RGBA(0, 120, 212, 1)
+                        Height: =42
+                        HoverFill: =RGBA(0, 100, 180, 1)
+                        OnSelect: |-
+                          =Patch(
+                              colPatternDef,
+                              LookUp(colPatternDef, ItemKey = varSelectedItemKey),
+                              {
+                                  Remarks: rteRemarks.HtmlText
+                              }
+                          );
+                          Set(varSelectedItemKey, "");
+                          Set(varShowRemarksEdit, false);
+                          rteRemarks.HtmlText = ""
+                        Size: =12
+                        Text: ="保存する"
+                        Width: =140
+                        X: =628
+                        Y: =540
+                  - btnRemarksEditCancel:
+                      Control: Classic/Button@2.2.0
+                      Properties:
+                        BorderColor: =RGBA(190, 190, 190, 1)
+                        BorderThickness: =1
+                        Color: =RGBA(60, 60, 60, 1)
+                        Fill: =RGBA(255, 255, 255, 1)
+                        Height: =42
+                        HoverFill: =RGBA(240, 240, 240, 1)
+                        OnSelect: =Set(varShowRemarksEdit, false)
+                        Size: =12
+                        Text: ="閉じる"
+                        Width: =100
+                        X: =778
+                        Y: =540
+                  - rteRemarks:
+                      Control: RichTextEditor@2.7.0
+                      Properties:
+                        BorderColor: =RGBA(202, 202, 202, 1)
+                        Default: =Coalesce(LookUp(colPatternDef, ItemKey = varSelectedItemKey).Remarks, "")
+                        Height: =449
+                        Width: =Parent.Width - (30 * 2)
+                        X: =(Parent.Width - Self.Width) / 2
+                        Y: =72
             - recPatDelOverlay:
                 Control: Rectangle@2.3.0
                 Properties:
@@ -8331,6 +8550,7 @@ Screens:
             Set(varEditDaysPre, varPreDraft.EditDays);
             Set(varFramePatternPre, varPreDraft.PatternName);
             Set(varFrameMailTmplPre, varPreDraft.MailTemplate);
+            Set(varFrameEventMailTmplPre, varPreDraft.EventMailTemplate);
             Set(varFrameActivePre, varPreDraft.IsActive);
             Set(varFrameColorRPre, varPreDraft.ColorR);
             Set(varFrameColorGPre, varPreDraft.ColorG);
@@ -8654,7 +8874,8 @@ Screens:
                             CloseDays: txtCloseDays_Pre.Text,
                             EditDays: txtEditDays_Pre.Text,
                             PatternName: ddFramePattern_Pre.Selected.パターン名,
-                            MailTemplate: ddMailTemplate_Pre.Selected.Value,
+                            MailTemplate: ddMailResTemplate_Pre.Selected.テンプレート名,
+                            EventMailTemplate: ddMailEveTemplate_Pre.Selected.テンプレート名,
                             IsActive: chkFrameActive_Pre.Value,
                             ColorR: varFrameColorRPre,
                             ColorG: varFrameColorGPre,
@@ -8730,6 +8951,7 @@ Screens:
                     Clear(colWdSelectedPre);
                     Set(varFramePatternPre, "");
                     Set(varFrameMailTmplPre, "");
+                    Set(varFrameEventMailTmplPre, "");
                     Set(varFrameActivePre, true);
                     Set(varFrameCategoryPre, Blank());
                     Set(varFrameSubCategoryPre, Blank());
@@ -8800,7 +9022,8 @@ Screens:
                         )
                     );
                     Set(varFramePatternPre, ThisItem.PatternName);
-                    Set(varFrameMailTmplPre, ThisItem.メールテンプレート名);
+                    Set(varFrameMailTmplPre, ThisItem.予約確定時メール);
+                    Set(varFrameEventMailTmplPre, ThisItem.開催前案内メール);
                     Set(varFrameActivePre, ThisItem.IsActive);
                     Set(varFrameColorRPre, Coalesce(ThisItem.ColorR, 126));
                     Set(varFrameColorGPre, Coalesce(ThisItem.ColorG, 199));
@@ -8910,6 +9133,36 @@ Screens:
                         Width: =380
                         X: =10
                         Y: =32
+            - btnUnExpandFrame_Pre:
+                Control: Classic/Button@2.2.0
+                Properties:
+                  BorderThickness: =0
+                  Color: =RGBA(255, 255, 255, 1)
+                  DisplayMode: |-
+                    =If(
+                    IsBlank(varEditFrameIdPre) ||
+                    Coalesce(
+                    LookUp(colFrameListPre, ID = varEditFrameIdPre).ExpandStatus,
+                    "未展開"
+                    ) <> "展開済み",
+                    DisplayMode.Disabled,
+                    DisplayMode.Edit
+                    )
+                  Fill: =RGBA(16, 124, 16, 1)
+                  HoverFill: =RGBA(12, 100, 12, 1)
+                  OnSelect: |-
+                    =IfError(
+                        Patch(予約枠事前登録マスタ, LookUp(予約枠事前登録マスタ, ID = varEditFrameIdPre), { ExpandStatus: "未展開" }),
+                        Notify("更新に失敗しました", NotificationType.Error),
+                        Refresh(予約枠事前登録マスタ);
+                        ClearCollect(colFrameListPre, Sort(予約枠事前登録マスタ, ID, SortOrder.Ascending));
+                        Notify("枠を未展開に戻しました", NotificationType.Success)
+                    )
+                  Size: =12
+                  Text: ="展開済を解除"
+                  Width: =135
+                  X: =293
+                  Y: =692
             - btnExpandFrame_Pre:
                 Control: Classic/Button@2.2.0
                 Properties:
@@ -8917,7 +9170,11 @@ Screens:
                   Color: =RGBA(255, 255, 255, 1)
                   DisplayMode: |-
                     =If(
-                        IsBlank(varEditFrameIdPre) ||
+                        IsBlank(varEditFrameIdPre) || 
+                            Coalesce(
+                                Not(LookUp(colFrameListPre, ID = varEditFrameIdPre).IsActive),
+                                false
+                            ) ||
                             Coalesce(
                                 LookUp(colFrameListPre, ID = varEditFrameIdPre).ExpandStatus,
                                 "未展開"
@@ -8932,8 +9189,8 @@ Screens:
                     Set(varShowExpandConfirm, true)
                   Size: =12
                   Text: ="選択した事前登録を展開する"
-                  Width: =406
-                  X: =22
+                  Width: =250
+                  X: =27
                   Y: =692
             - lblExpandGuide_Pre:
                 Control: Label@2.5.1
@@ -8958,123 +9215,6 @@ Screens:
                   Width: =406
                   X: =22
                   Y: =736
-            - recExpandOverlay_Pre:
-                Control: Rectangle@2.3.0
-                Properties:
-                  Fill: =RGBA(0, 0, 0, 0.4)
-                  Height: =Parent.Height
-                  OnSelect: =Set(varShowExpandConfirm, false)
-                  Visible: =varShowExpandConfirm
-                  Width: =Parent.Width
-            - conExpandConfirm_Pre:
-                Control: GroupContainer@1.5.0
-                Variant: ManualLayout
-                Properties:
-                  DropShadow: =DropShadow.Bold
-                  Fill: =RGBA(255, 255, 255, 1)
-                  Height: =260
-                  Visible: =varShowExpandConfirm
-                  Width: =560
-                  X: =(Parent.Width - 560) / 2
-                  Y: =200
-                Children:
-                  - recExpandHead_Pre:
-                      Control: Rectangle@2.3.0
-                      Properties:
-                        Fill: =RGBA(16, 124, 16, 1)
-                        Height: =46
-                        Width: =560
-                  - lblExpandTitle_Pre:
-                      Control: Label@2.5.1
-                      Properties:
-                        Color: =RGBA(255, 255, 255, 1)
-                        FontWeight: =FontWeight.Semibold
-                        Height: =46
-                        Size: =14
-                        Text: ="予約枠を展開します"
-                        Width: =520
-                        X: =16
-                  - lblExpandBody_Pre:
-                      Control: Label@2.5.1
-                      Properties:
-                        Height: =120
-                        Size: =12
-                        Text: |-
-                          ="「" & Coalesce(LookUp(colFrameListPre, ID = varEditFrameIdPre).Title, "－") &
-                          "」を予約枠へ展開します。" & Char(10) & Char(10) &
-                          "利用期間・利用曜日・例外休業日にもとづいて枠が作成されます。" & Char(10) &
-                          "展開後は、この事前登録を編集できなくなります。" & Char(10) &
-                          "件数によっては完了まで時間がかかります。"
-                        VerticalAlign: =VerticalAlign.Top
-                        Width: =510
-                        X: =24
-                        Y: =62
-                  - btnExpandRun_Pre:
-                      Control: Classic/Button@2.2.0
-                      Properties:
-                        BorderThickness: =0
-                        Color: =RGBA(255, 255, 255, 1)
-                        Fill: =RGBA(16, 124, 16, 1)
-                        Height: =42
-                        HoverFill: =RGBA(12, 100, 12, 1)
-                        OnSelect: |-
-                          =// ---- 事前登録を予約枠へ展開する ----
-                          Set(varExpandTargetId, varEditFrameIdPre);
-                          Set(varExpandFailed, false);
-
-                          // 先に「展開中」へ切り替え、展開ボタンを非活性にする
-                          Patch(
-                              予約枠事前登録マスタ,
-                              LookUp(予約枠事前登録マスタ, ID = varExpandTargetId),
-                              {ExpandStatus: "展開中"}
-                          );
-
-                          // Power Automate へ事前登録の ID を引き渡す（戻り値なし）
-                          // 完了時の「展開済み」への更新はフロー側で行う
-                          IfError(
-                              '【新予約システム】予約枠展開フロー'.Run(varExpandTargetId),
-                              Set(varExpandFailed, true)
-                          );
-
-                          // 起動に失敗したら「未展開」へ戻し、もう一度実行できるようにする
-                          If(
-                              varExpandFailed,
-                              Patch(
-                                  予約枠事前登録マスタ,
-                                  LookUp(予約枠事前登録マスタ, ID = varExpandTargetId),
-                                  {ExpandStatus: "未展開"}
-                              )
-                          );
-
-                          ClearCollect(colFrameListPre, Sort(予約枠事前登録マスタ, ID));
-                          Set(varShowExpandConfirm, false);
-                          Notify(
-                              If(
-                                  varExpandFailed,
-                                  "展開フローの起動に失敗しました。もう一度お試しください",
-                                  "展開を開始しました。完了までカレンダーに枠は表示されません"
-                              ),
-                              If(varExpandFailed, NotificationType.Error, NotificationType.Success)
-                          )
-                        Size: =12
-                        Text: ="展開する"
-                        X: =230
-                        Y: =196
-                  - btnExpandCancel_Pre:
-                      Control: Classic/Button@2.2.0
-                      Properties:
-                        BorderColor: =RGBA(190, 190, 190, 1)
-                        BorderThickness: =1
-                        Color: =RGBA(60, 60, 60, 1)
-                        Fill: =RGBA(255, 255, 255, 1)
-                        Height: =42
-                        HoverFill: =RGBA(240, 240, 240, 1)
-                        OnSelect: =Set(varShowExpandConfirm, false)
-                        Size: =12
-                        Text: ="キャンセル"
-                        Width: =120
-                        X: =400
-                        Y: =196
             - btnTabFrame:
                 Control: Classic/Button@2.2.0
                 Properties:
@@ -9129,7 +9269,7 @@ Screens:
                       Properties:
                         DropShadow: =DropShadow.None
                         FillPortions: =0
-                        Height: =800
+                        Height: =852
                         Width: =Parent.Width
                       Children:
                         - lblFrameMode_Pre:
@@ -9582,24 +9722,56 @@ Screens:
                               Width: =40
                               X: =506
                               Y: =429
-                        - lblMailTmplGuide_Pre:
+                        - lblMailEveTmplGuide_Pre:
                             Control: Label@2.5.1
                             Properties:
                               Size: =12
-                              Text: ="メールテンプレート"
+                              Text: ="開催前案内メール"
+                              Width: =167
+                              X: =13
+                              Y: =532
+                        - ddMailEveTemplate_Pre:
+                            Control: Classic/DropDown@2.3.1
+                            Properties:
+                              AllowEmptySelection: =true
+                              BorderThickness: =1
+                              Default: =varFrameEventMailTmplPre
+                              FocusedBorderThickness: =2
+                              Items: |-
+                                =Filter(
+                                    メールテンプレート管理,
+                                    '共通／個別'.Value = "個別",
+                                    個別タイミング.Value = "開催前"
+                                )
+                              Items.Value: =Title
+                              OnChange: =Set(varFrameEventMailTmplPre, Self.Selected.テンプレート名)
+                              Size: =12
+                              Width: =270
+                              X: =180
+                              Y: =532
+                        - lblMailResTmplGuide_Pre:
+                            Control: Label@2.5.1
+                            Properties:
+                              Size: =12
+                              Text: ="予約登録時メール"
                               Width: =167
                               X: =13
                               Y: =480
-                        - ddMailTemplate_Pre:
+                        - ddMailResTemplate_Pre:
                             Control: Classic/DropDown@2.3.1
                             Properties:
                               AllowEmptySelection: =true
                               BorderThickness: =1
                               Default: =varFrameMailTmplPre
                               FocusedBorderThickness: =2
-                              Items: =Distinct(Filter(メールテンプレート管理, '共通／個別'.Value = "個別"), テンプレート名).Value
-                              Items.Value: =Value
-                              OnChange: =Set(varFrameMailTmplPre, Self.Selected.Value)
+                              Items: |-
+                                =Filter(
+                                    メールテンプレート管理,
+                                    '共通／個別'.Value = "個別",
+                                    個別タイミング.Value = "承認時"
+                                )
+                              Items.Value: =Title
+                              OnChange: =Set(varFrameMailTmplPre, Self.Selected.テンプレート名)
                               Size: =12
                               Width: =270
                               X: =180
@@ -9611,7 +9783,7 @@ Screens:
                               Text: ="表示色"
                               Width: =167
                               X: =13
-                              Y: =532
+                              Y: =584
                         - recFrameColor_Pre:
                             Control: Rectangle@2.3.0
                             Properties:
@@ -9627,7 +9799,7 @@ Screens:
                               Height: =40
                               Width: =64
                               X: =180
-                              Y: =532
+                              Y: =584
                         - btnPickColor_Pre:
                             Control: Classic/Button@2.2.0
                             Properties:
@@ -9636,7 +9808,7 @@ Screens:
                               Text: ="色を選択"
                               Width: =140
                               X: =256
-                              Y: =532
+                              Y: =584
                         - lblPublishGuide_Pre:
                             Control: Label@2.5.1
                             Properties:
@@ -9644,7 +9816,7 @@ Screens:
                               Text: ="公開日"
                               Width: =167
                               X: =13
-                              Y: =584
+                              Y: =636
                         - dpPublishDate_Pre:
                             Control: Classic/DatePicker@2.6.0
                             Properties:
@@ -9656,7 +9828,7 @@ Screens:
                               Size: =13
                               Width: =180
                               X: =180
-                              Y: =584
+                              Y: =636
                         - ddPublishHour_Pre:
                             Control: Classic/DropDown@2.3.1
                             Properties:
@@ -9668,7 +9840,7 @@ Screens:
                               OnChange: =Set(varPublishHourPre, Self.Selected.HourVal)
                               Width: =72
                               X: =368
-                              Y: =584
+                              Y: =636
                         - lblPublishColon_Pre:
                             Control: Label@2.5.1
                             Properties:
@@ -9676,7 +9848,7 @@ Screens:
                               Text: =":"
                               Width: =20
                               X: =440
-                              Y: =584
+                              Y: =636
                         - ddPublishMinute_Pre:
                             Control: Classic/DropDown@2.3.1
                             Properties:
@@ -9688,7 +9860,7 @@ Screens:
                               OnChange: =Set(varPublishMinutePre, Self.Selected.MinVal)
                               Width: =72
                               X: =462
-                              Y: =584
+                              Y: =636
                         - lblPublishNote_Pre:
                             Control: Label@2.5.1
                             Properties:
@@ -9697,7 +9869,7 @@ Screens:
                               Text: ="以降に公開"
                               Width: =117
                               X: =542
-                              Y: =584
+                              Y: =636
                         - lblCloseGuide_Pre:
                             Control: Label@2.5.1
                             Properties:
@@ -9705,7 +9877,7 @@ Screens:
                               Text: ="受付期限"
                               Width: =167
                               X: =13
-                              Y: =636
+                              Y: =688
                         - txtCloseDays_Pre:
                             Control: Classic/TextInput@2.3.2
                             Properties:
@@ -9715,7 +9887,7 @@ Screens:
                               HintText: ="0"
                               Width: =90
                               X: =180
-                              Y: =636
+                              Y: =688
                         - lblCloseUnit_Pre:
                             Control: Label@2.5.1
                             Properties:
@@ -9724,7 +9896,7 @@ Screens:
                               Text: ="日前まで新規予約を受け付ける"
                               Width: =380
                               X: =278
-                              Y: =636
+                              Y: =688
                         - lblEditLimitGuide_Pre:
                             Control: Label@2.5.1
                             Properties:
@@ -9732,7 +9904,7 @@ Screens:
                               Text: ="更新期限"
                               Width: =167
                               X: =13
-                              Y: =688
+                              Y: =740
                         - txtEditDays_Pre:
                             Control: Classic/TextInput@2.3.2
                             Properties:
@@ -9742,7 +9914,7 @@ Screens:
                               HintText: ="0"
                               Width: =90
                               X: =180
-                              Y: =688
+                              Y: =740
                         - lblEditUnit_Pre:
                             Control: Label@2.5.1
                             Properties:
@@ -9751,17 +9923,17 @@ Screens:
                               Text: ="日前まで予約者が変更・取り消しできる"
                               Width: =380
                               X: =278
-                              Y: =688
+                              Y: =740
                         - chkFrameActive_Pre:
                             Control: Classic/CheckBox@2.1.0
                             Properties:
                               Default: =varFrameActivePre
                               Height: =40
                               Size: =12
-                              Text: ="有効（オフにするとカレンダー非表示）"
+                              Text: ="有効（オフにすると展開不可）"
                               Width: =350
                               X: =180
-                              Y: =740
+                              Y: =792
             - conExceptForm:
                 Control: GroupContainer@1.5.0
                 Variant: ManualLayout
@@ -9913,6 +10085,13 @@ Screens:
                                     パターン名 = ddFramePattern_Pre.Selected.パターン名
                                 ).構成JSON,
                                 ""
+                            ),
+                            rmk: Coalesce(
+                                LookUp(
+                                    パターンマスタ,
+                                    パターン名 = ddFramePattern_Pre.Selected.パターン名
+                                ).備考JSON,
+                                ""
                             )
                         },
                         If(
@@ -9952,8 +10131,10 @@ Screens:
                             Notify("中分類を選択してください", NotificationType.Error),
                             IsBlank(ddFramePattern_Pre.Selected.パターン名),
                             Notify("入力パターンを選択してください", NotificationType.Error),
-                            IsBlank(ddMailTemplate_Pre.Selected.Value),
-                            Notify("メールテンプレートを選択してください", NotificationType.Error),
+                            IsBlank(ddMailResTemplate_Pre.Selected.テンプレート名),
+                            Notify("予約確定時メールを選択してください", NotificationType.Error),
+                            IsBlank(ddMailEveTemplate_Pre.Selected.テンプレート名),
+                            Notify("開催前案内メールを選択してください", NotificationType.Error),
                             // ---- 保存 ----
                             If(
                                 varFrameModePre = "new",
@@ -9980,8 +10161,10 @@ Screens:
                                         Weekdays: wd,
                                         ExceptDays: exd,
                                         ConfigJson: cfg,
+                                        RemarksJson: rmk,
                                         PatternName: ddFramePattern_Pre.Selected.パターン名,
-                                        メールテンプレート名: ddMailTemplate_Pre.Selected.Value,
+                                        予約確定時メール: ddMailResTemplate_Pre.Selected.テンプレート名,
+                                        開催前案内メール: ddMailEveTemplate_Pre.Selected.テンプレート名,
                                         IsActive: chkFrameActive_Pre.Value,
                                         ColorR: varFrameColorRPre,
                                         ColorG: varFrameColorGPre,
@@ -10018,8 +10201,10 @@ Screens:
                                         Weekdays: wd,
                                         ExceptDays: exd,
                                         ConfigJson: cfg,
+                                        RemarksJson: rmk,
                                         PatternName: ddFramePattern_Pre.Selected.パターン名,
-                                        メールテンプレート名: ddMailTemplate_Pre.Selected.Value,
+                                        予約確定時メール: ddMailResTemplate_Pre.Selected.テンプレート名,
+                                        開催前案内メール: ddMailEveTemplate_Pre.Selected.テンプレート名,
                                         IsActive: chkFrameActive_Pre.Value,
                                         ColorR: varFrameColorRPre,
                                         ColorG: varFrameColorGPre,
@@ -10074,6 +10259,123 @@ Screens:
                   Width: =280
                   X: =799
                   Y: =699
+            - recExpandOverlay_Pre:
+                Control: Rectangle@2.3.0
+                Properties:
+                  Fill: =RGBA(0, 0, 0, 0.4)
+                  Height: =Parent.Height
+                  OnSelect: =Set(varShowExpandConfirm, false)
+                  Visible: =varShowExpandConfirm
+                  Width: =Parent.Width
+            - conExpandConfirm_Pre:
+                Control: GroupContainer@1.5.0
+                Variant: ManualLayout
+                Properties:
+                  DropShadow: =DropShadow.Bold
+                  Fill: =RGBA(255, 255, 255, 1)
+                  Height: =260
+                  Visible: =varShowExpandConfirm
+                  Width: =560
+                  X: =(Parent.Width - 560) / 2
+                  Y: =200
+                Children:
+                  - recExpandHead_Pre:
+                      Control: Rectangle@2.3.0
+                      Properties:
+                        Fill: =RGBA(16, 124, 16, 1)
+                        Height: =46
+                        Width: =560
+                  - lblExpandTitle_Pre:
+                      Control: Label@2.5.1
+                      Properties:
+                        Color: =RGBA(255, 255, 255, 1)
+                        FontWeight: =FontWeight.Semibold
+                        Height: =46
+                        Size: =14
+                        Text: ="予約枠を展開します"
+                        Width: =520
+                        X: =16
+                  - lblExpandBody_Pre:
+                      Control: Label@2.5.1
+                      Properties:
+                        Height: =120
+                        Size: =12
+                        Text: |-
+                          ="「" & Coalesce(LookUp(colFrameListPre, ID = varEditFrameIdPre).Title, "－") &
+                          "」を予約枠へ展開します。" & Char(10) & Char(10) &
+                          "利用期間・利用曜日・例外休業日にもとづいて枠が作成されます。" & Char(10) &
+                          "展開後は、この事前登録を編集できなくなります。" & Char(10) &
+                          "件数によっては完了まで時間がかかります。"
+                        VerticalAlign: =VerticalAlign.Top
+                        Width: =510
+                        X: =24
+                        Y: =62
+                  - btnExpandRun_Pre:
+                      Control: Classic/Button@2.2.0
+                      Properties:
+                        BorderThickness: =0
+                        Color: =RGBA(255, 255, 255, 1)
+                        Fill: =RGBA(16, 124, 16, 1)
+                        Height: =42
+                        HoverFill: =RGBA(12, 100, 12, 1)
+                        OnSelect: |-
+                          =// ---- 事前登録を予約枠へ展開する ----
+                          Set(varExpandTargetId, varEditFrameIdPre);
+                          Set(varExpandFailed, false);
+
+                          // 先に「展開中」へ切り替え、展開ボタンを非活性にする
+                          Patch(
+                              予約枠事前登録マスタ,
+                              LookUp(予約枠事前登録マスタ, ID = varExpandTargetId),
+                              {ExpandStatus: "展開中"}
+                          );
+
+                          // Power Automate へ事前登録の ID を引き渡す（戻り値なし）
+                          // 完了時の「展開済み」への更新はフロー側で行う
+                          IfError(
+                              '【新予約システム】予約枠展開フロー'.Run(varExpandTargetId),
+                              Set(varExpandFailed, true)
+                          );
+
+                          // 起動に失敗したら「未展開」へ戻し、もう一度実行できるようにする
+                          If(
+                              varExpandFailed,
+                              Patch(
+                                  予約枠事前登録マスタ,
+                                  LookUp(予約枠事前登録マスタ, ID = varExpandTargetId),
+                                  {ExpandStatus: "未展開"}
+                              )
+                          );
+
+                          ClearCollect(colFrameListPre, Sort(予約枠事前登録マスタ, ID));
+                          Set(varShowExpandConfirm, false);
+                          Notify(
+                              If(
+                                  varExpandFailed,
+                                  "展開フローの起動に失敗しました。もう一度お試しください",
+                                  "展開を開始しました。完了までカレンダーに枠は表示されません"
+                              ),
+                              If(varExpandFailed, NotificationType.Error, NotificationType.Success)
+                          )
+                        Size: =12
+                        Text: ="展開する"
+                        X: =230
+                        Y: =196
+                  - btnExpandCancel_Pre:
+                      Control: Classic/Button@2.2.0
+                      Properties:
+                        BorderColor: =RGBA(190, 190, 190, 1)
+                        BorderThickness: =1
+                        Color: =RGBA(60, 60, 60, 1)
+                        Fill: =RGBA(255, 255, 255, 1)
+                        Height: =42
+                        HoverFill: =RGBA(240, 240, 240, 1)
+                        OnSelect: =Set(varShowExpandConfirm, false)
+                        Size: =12
+                        Text: ="キャンセル"
+                        Width: =120
+                        X: =400
+                        Y: =196
             - recColorOverlay_Pre:
                 Control: Rectangle@2.3.0
                 Properties:
@@ -10839,7 +11141,7 @@ Screens:
                             Filter(予約リスト, ResDate >= varResFrom, ResDate <= varResTo) As R,
                             {
                                 ID: R.ID,
-                                Title: R.Title,
+                                Title: R.予約名,
                                 FrameName: R.FrameName,
                                 PatternName: R.パターン名,
                                 ResDate: DateValue(Text(Coalesce(R.ResDate, Date(2000, 1, 1)), "yyyy/mm/dd")),
@@ -10953,6 +11255,7 @@ Screens:
                     Notify("承認待ちの予約をすべて予約確定にしました", NotificationType.Success)
                   Size: =12
                   Text: ="承認待ちをすべて予約確定に"
+                  Visible: =false
                   Width: =250
                   X: =414
                   Y: =77
@@ -11109,6 +11412,30 @@ Screens:
                         Width: =880
                         X: =16
                         Y: =(Parent.Height / 2) - (Self.Height / 2)
+            - btnBackToCal:
+                Control: ModernButton@1.0.0
+                Properties:
+                  Height: =36
+                  OnSelect: |-
+                    =// カレンダーへ戻り、枠情報ポップアップを開いた状態に復元する
+                    Set(varPopupFrame, varReturnFrame);
+                    Set(varPopupDate, varReturnDate);
+                    Set(varSelectedStart, varReturnStart);
+                    Set(varSelectedSlotKey, varReturnSlotKey);
+                    Set(varPopupDayId, varReturnDayId);
+                    Set(varSelectedSlotId, varReturnSlotId);
+                    Set(varDayInfo, LookUp(予約枠日マスタ, ID = varReturnDayId));
+                    Set(varFrameInfo, LookUp(予約枠時間マスタ, ID = varReturnSlotId));
+                    Set(varShowPopup, false);
+                    Set(varRestoreFrameInfo, true);
+                    Set(varFromCalendar, false);
+                    Set(varResSlotFilter, Blank());
+                    Set(varResSlotFilterLabel, Blank());
+                    Navigate(scnCalendarAdmin, ScreenTransition.None)
+                  Text: ="戻る"
+                  Visible: =varFromCalendar
+                  X: =1020
+                  Y: =77
             - recResOverlay:
                 Control: Rectangle@2.3.0
                 Properties:
@@ -11233,13 +11560,13 @@ Screens:
                         Y: =222
                   - galAnswerView:
                       Control: Gallery@2.15.0
-                      Variant: Vertical
+                      Variant: BrowseLayout_Flexible_SocialFeed_ver5.0
                       Properties:
                         Height: =296
                         Items: =SortByColumns(colViewAnswers, "Block", "SortNo")
                         TemplatePadding: =2
                         TemplateSize: =62
-                        Width: =680
+                        Width: =690
                         X: =20
                         Y: =252
                       Children:
@@ -11256,8 +11583,20 @@ Screens:
                                     RGBA(251, 233, 241, 1),
                                     RGBA(255, 255, 255, 1)
                                 )
-                              Height: =60
+                              Height: =If(ThisItem.Kind = "section", lblAnsSection.Height, If(lblAnsLabel.Height > Parent.TemplateHeight, lblAnsLabel.Height + 10, Parent.TemplateHeight))
+                              Width: =Parent.TemplateWidth - 10
+                        - recAnsRowSpacer:
+                            Control: Rectangle@2.3.0
+                            Properties:
+                              BorderColor: =RGBA(0, 0, 0, 0)
+                              BorderStyle: =BorderStyle.None
+                              DisabledFill: =
+                              Fill: =RGBA(0, 0, 0, 0)
+                              Height: =2
+                              HoverFill: =
+                              PressedFill: =
                               Width: =Parent.TemplateWidth
+                              Y: =recAnsRow.Y + recAnsRow.Height
                         - lblAnsSection:
                             Control: Label@2.5.1
                             Properties:
@@ -11272,32 +11611,46 @@ Screens:
                         - lblAnsLabel:
                             Control: Label@2.5.1
                             Properties:
+                              AutoHeight: =true
                               Color: =RGBA(110, 110, 110, 1)
-                              Height: =56
+                              Height: =60
                               Size: =12
                               Text: =ThisItem.Label
                               Visible: =ThisItem.Kind <> "section"
                               Width: =260
                               X: =12
-                              Y: =2
+                              Y: =(recAnsRow.Height - Self.Height) / 2
                         - lblAnsValue:
                             Control: Label@2.5.1
                             Properties:
+                              AutoHeight: =true
                               Color: =If(IsBlank(ThisItem.Value), RGBA(170, 170, 170, 1), RGBA(40, 40, 40, 1))
-                              Height: =56
-                              Text: |-
-                                =If(
-                                    IsBlank(ThisItem.Value),
-                                    "（未入力）",
-                                    // 複数選択（checkbox）はカンマ区切りで保存されているため " / " に直して見せる
-                                    ThisItem.Kind = "checkbox",
-                                    Substitute(ThisItem.Value, ",", " / "),
-                                    ThisItem.Value
-                                )
+                              Height: =60
+                              Text: =If(IsBlank(ThisItem.Value), "（未入力）", ThisItem.Value)
                               Visible: =ThisItem.Kind <> "section"
                               Width: =380
                               X: =284
-                              Y: =2
+                              Y: =(recAnsRow.Height - Self.Height) / 2
+                        - btnAnsChgUser:
+                            Control: ModernButton@1.0.0
+                            Properties:
+                              BorderStyle: =BorderStyle.None
+                              Height: =40
+                              Icon: ="Person"
+                              OnSelect: |-
+                                =Set(varShowResPopup, false);
+                                Set(varShowUserPopup, true);
+                              RadiusBottomLeft: =40
+                              RadiusBottomRight: =40
+                              RadiusTopLeft: =40
+                              RadiusTopRight: =40
+                              Size: =20
+                              Text: =""
+                              Tooltip: ="パターン管理"
+                              Visible: =ThisItem.ItemKey = "sec_yoyakusha"
+                              Width: =40
+                              X: =625
+                              Y: =(Parent.TemplateHeight - Self.Height) / 2
                   - lblRejectReason:
                       Control: Label@2.5.1
                       Properties:
@@ -11380,19 +11733,11 @@ Screens:
                         Fill: =RGBA(232, 62, 140, 1)
                         Height: =46
                         OnSelect: |-
-                          =If(
-                              varSelEditExpired,
-                              Notify(
-                                  "更新期限（" & Text(varSelEditLimit, "yyyy/mm/dd") &
-                                      " まで）を過ぎているため差し戻しできません。内容の修正は編集から行ってください",
-                                  NotificationType.Warning
-                              ),
-                              Reset(txtRejectReason);
-                              Set(varShowRejectPopup, true)
-                          )
+                          =Reset(txtRejectReason);
+                          Set(varShowRejectPopup, true)
                         Size: =12
                         Text: ="差し戻す"
-                        Visible: =varSelRes.Status = "予約確定"
+                        Visible: =varSelRes.Status = "予約確定" || varSelRes.Status = "承認待ち" || varSelRes.Status = "再承認待ち"
                         Width: =150
                         X: =180
                         Y: =602
@@ -11420,39 +11765,11 @@ Screens:
                         Color: =RGBA(180, 40, 40, 1)
                         Height: =46
                         OnSelect: |-
-                          =// 押さえていた枠をすべて解放し、日枠の満枠スロット数を数え直す
-                          // ForAll の中では Set が使えないため、先に日枠のIDを取得しておく
-                          /*Set(varRelDayId, First(Filter(予約明細, ResId = varSelRes.ID)).DayId);
-                          ForAll(
-                              Filter(予約明細, ResId = varSelRes.ID) As D,
-                              Patch(
-                                  予約枠時間マスタ,
-                                  LookUp(予約枠時間マスタ, ID = D.SlotId),
-                                  {
-                                      ReservedCount: Max(
-                                          Coalesce(LookUp(予約枠時間マスタ, ID = D.SlotId).ReservedCount, 0) -
-                                              Coalesce(D.HeadCount, 0),
-                                          0
-                                      )
-                                  }
-                              )
-                          );
-                          Remove(予約明細, Filter(予約明細, ResId = varSelRes.ID));*/
-                          // 履歴として残すため、予約リストは消さず状態だけ変える
-                          Patch(
+                          =Patch(
                               予約リスト,
                               LookUp(予約リスト, ID = varSelRes.ID),
                               {Status: "取り消し"}
                           );
-                          /*If(
-                              !IsBlank(varRelDayId),
-                              ClearCollect(colDaySlots, Filter(予約枠時間マスタ, DayId = varRelDayId));
-                              Patch(
-                                  予約枠日マスタ,
-                                  LookUp(予約枠日マスタ, ID = varRelDayId),
-                                  {FullSlots: CountRows(Filter(colDaySlots, ReservedCount >= Capacity))}
-                              )
-                          );*/
                           '【新予約システム】予約取消時フロー'.Run(varSelRes.ID);
                           Select(btnAdminReload);
                           Set(varShowResPopup, false);
@@ -11576,30 +11893,174 @@ Screens:
                         Width: =472
                         X: =24
                         Y: =96
-            - btnBackToCal:
-                Control: ModernButton@1.0.0
+            - conChgUserPopup:
+                Control: GroupContainer@1.5.0
+                Variant: ManualLayout
                 Properties:
-                  Height: =36
-                  OnSelect: |-
-                    =// カレンダーへ戻り、枠情報ポップアップを開いた状態に復元する
-                    Set(varPopupFrame, varReturnFrame);
-                    Set(varPopupDate, varReturnDate);
-                    Set(varSelectedStart, varReturnStart);
-                    Set(varSelectedSlotKey, varReturnSlotKey);
-                    Set(varPopupDayId, varReturnDayId);
-                    Set(varSelectedSlotId, varReturnSlotId);
-                    Set(varDayInfo, LookUp(予約枠日マスタ, ID = varReturnDayId));
-                    Set(varFrameInfo, LookUp(予約枠時間マスタ, ID = varReturnSlotId));
-                    Set(varShowPopup, false);
-                    Set(varRestoreFrameInfo, true);
-                    Set(varFromCalendar, false);
-                    Set(varResSlotFilter, Blank());
-                    Set(varResSlotFilterLabel, Blank());
-                    Navigate(scnCalendarAdmin, ScreenTransition.None)
-                  Text: ="戻る"
-                  Visible: =varFromCalendar
-                  X: =1020
-                  Y: =77
+                  DropShadow: =DropShadow.Bold
+                  Fill: =RGBA(255, 255, 255, 1)
+                  Height: =350
+                  Visible: =varShowUserPopup
+                  Width: =460
+                  X: =(Parent.Width - Self.Width) / 2
+                  Y: =(Parent.Height - Self.Height) / 2
+                Children:
+                  - recGroupPopupHead_1:
+                      Control: Rectangle@2.3.0
+                      Properties:
+                        Fill: =RGBA(90, 90, 90, 1)
+                        Height: =46
+                        Width: =460
+                  - lblGroupPopupTitle_1:
+                      Control: Label@2.5.1
+                      Properties:
+                        Color: =RGBA(255, 255, 255, 1)
+                        FontWeight: =FontWeight.Semibold
+                        Height: =46
+                        Size: =14
+                        Text: ="予約者を変更"
+                        Width: =360
+                        X: =16
+                  - btnGroupClose_1:
+                      Control: Classic/Button@2.2.0
+                      Properties:
+                        BorderThickness: =0
+                        Color: =RGBA(255, 255, 255, 1)
+                        Fill: =RGBA(0, 0, 0, 0)
+                        Height: =34
+                        OnSelect: =Set(varShowUserPopup, false)
+                        Text: ="✕"
+                        Width: =36
+                        X: =412
+                        Y: =6
+                  - lblNewUser:
+                      Control: Label@2.5.1
+                      Properties:
+                        Height: =30
+                        Size: =12
+                        Text: ="予約者名"
+                        Width: =412
+                        X: =24
+                        Y: =70
+                  - btnSaveChgUser:
+                      Control: Classic/Button@2.2.0
+                      Properties:
+                        BorderThickness: =0
+                        Color: =RGBA(255, 255, 255, 1)
+                        Fill: =RGBA(0, 120, 212, 1)
+                        Height: =46
+                        OnSelect: |-
+                          =// 氏名を変更
+                          Patch(
+                              colViewAnswers,
+                              LookUp(colViewAnswers, ItemKey = "fix_name_kanji"),
+                              {
+                                  Value: cmbNewUser.Selected.氏名
+                              }
+                          );
+                          // 所属名（支店名）を変更
+                          Patch(
+                              colViewAnswers,
+                              LookUp(colViewAnswers, ItemKey = "fix_division"),
+                              {
+                                  Value: cmbNewUser.Selected.組織階層2
+                              }
+                          );
+                          // 担当課長を変更
+                          Patch(
+                              colViewAnswers,
+                              LookUp(colViewAnswers, ItemKey = "fix_manager"),
+                              {
+                                  Value: cmbNewManager.Selected.氏名
+                              }
+                          );
+
+                          // 予約者情報を更新
+                          Patch(
+                              LookUp(予約リスト, ID = varSelRes.ID),
+                              {
+                                  回答JSON: colViewAnswers
+                              }
+                          );
+                          Set(varShowUserPopup, false);
+                          Set(varShowResPopup, true);
+                        Text: ="予約者を変更"
+                        Width: =186
+                        X: =84
+                        Y: =281
+                  - btnChgUserCancel:
+                      Control: Classic/Button@2.2.0
+                      Properties:
+                        Height: =46
+                        OnSelect: |+
+                          =Set(varShowResPopup, false);
+                          Set(varShowUserPopup, true);
+                        Text: ="キャンセル"
+                        Width: =152
+                        X: =284
+                        Y: =281
+                  - cmbNewUser:
+                      Control: Classic/ComboBox@2.4.0
+                      Properties:
+                        BorderColor: =RGBA(0, 18, 107, 1)
+                        ChevronBackground: =RGBA(56, 96, 178, 1)
+                        ChevronFill: =RGBA(255, 255, 255, 1)
+                        ChevronHoverBackground: =ColorFade(RGBA(56, 96, 178, 1), -20%)
+                        ChevronHoverFill: =RGBA(255, 255, 255, 1)
+                        DisplayFields: =["field_1","field_11"]
+                        Font: =Font.'Open Sans'
+                        HoverFill: =RGBA(186, 202, 226, 1)
+                        InputTextPlaceholder: ="ユーザーの検索"
+                        Items: =Filter(ユーザー名簿, StartsWith(氏名, Self.SearchText))
+                        OnChange: =
+                        PressedColor: =RGBA(255, 255, 255, 1)
+                        PressedFill: =RGBA(0, 18, 107, 1)
+                        SearchFields: =["field_1"]
+                        SelectMultiple: =false
+                        SelectionColor: =RGBA(255, 255, 255, 1)
+                        SelectionFill: =RGBA(56, 96, 178, 1)
+                        Width: =412
+                        X: =24
+                        Y: =102
+                  - lblNewManager:
+                      Control: Label@2.5.1
+                      Properties:
+                        Height: =30
+                        Size: =12
+                        Text: ="担当課長"
+                        Width: =412
+                        X: =24
+                        Y: =151
+                  - cmbNewManager:
+                      Control: Classic/ComboBox@2.4.0
+                      Properties:
+                        BorderColor: =RGBA(0, 18, 107, 1)
+                        ChevronBackground: =RGBA(56, 96, 178, 1)
+                        ChevronFill: =RGBA(255, 255, 255, 1)
+                        ChevronHoverBackground: =ColorFade(RGBA(56, 96, 178, 1), -20%)
+                        ChevronHoverFill: =RGBA(255, 255, 255, 1)
+                        DisplayFields: =["field_1","field_11"]
+                        Font: =Font.'Open Sans'
+                        HoverFill: =RGBA(186, 202, 226, 1)
+                        InputTextPlaceholder: ="ユーザーの検索"
+                        Items: |-
+                          =Filter(
+                              ユーザー名簿,
+                              役職 = "課長",
+                              組織階層0 = cmbNewUser.Selected.組織階層0,
+                              組織階層1 = cmbNewUser.Selected.組織階層1,
+                              組織階層2 = cmbNewUser.Selected.組織階層2,
+                              組織階層3 = cmbNewUser.Selected.組織階層3
+                          )
+                        PressedColor: =RGBA(255, 255, 255, 1)
+                        PressedFill: =RGBA(0, 18, 107, 1)
+                        SearchFields: =["field_1"]
+                        SelectMultiple: =false
+                        SelectionColor: =RGBA(255, 255, 255, 1)
+                        SelectionFill: =RGBA(56, 96, 178, 1)
+                        Width: =412
+                        X: =24
+                        Y: =183
   scnReserveEntryUser:
     Properties:
       Fill: =RGBA(245, 247, 250, 1)
@@ -11747,6 +12208,16 @@ Screens:
         Set(varSelectedEnd, DateAdd(varSelectedStart, varDurMin, TimeUnit.Minutes));
         If(
             varEntryMode = "edit",
+            ClearCollect(
+                colRemarksRaw,
+                ForAll(
+                    Table(ParseJSON(Coalesce(LookUp(予約枠時間マスタ, ID = varSelRes.SlotId, RemarksJson), "[]"))) As J,
+                    {
+                        Id: Text(J.Value.id),
+                        Remarks: Text(J.Value.remarks)
+                    }
+                )
+            );
             // ---------- 編集モード : 回答JSONだけで画面を再構成 ----------
             ClearCollect(
                 colAnswers,
@@ -11759,7 +12230,8 @@ Screens:
                         Choices: Coalesce(Text(J.Value.Choices), "[]"),
                         Req: Coalesce(Boolean(J.Value.Req), false),
                         Hint: Text(J.Value.Hint),
-                        Remarks: Text(J.Value.Remarks),
+                        //Remarks: Text(J.Value.Remarks),
+                        Remarks: LookUp(colRemarksRaw, Id = J.Value.Itemkey, Remarks),
                         Value: Text(J.Value.Value),
                         Block: Coalesce(Value(J.Value.Block), 2),
                         SortNo: Coalesce(Value(J.Value.SortNo), 0),
@@ -11860,7 +12332,7 @@ Screens:
                         Choices: Coalesce(Text(J.Value.choices), "[]"),
                         Req: Coalesce(Boolean(J.Value.req), false),
                         Hint: Text(J.Value.note),
-                        Remarks: Text(J.Value.remarks),
+                        //Remarks: Text(J.Value.remarks),
                         Value: "",
                         Block: 2,
                         Source: "pattern",
@@ -11868,9 +12340,30 @@ Screens:
                     }
                 )
             );
+
+            // (3) 備考欄
+            ClearCollect(
+                colRemarksRaw,
+                ForAll(
+                    Table(ParseJSON(Coalesce(LookUp(予約枠時間マスタ, ID = varSelRes.SlotId, RemarksJson), "[]"))) As J,
+                    {
+                        Id: Text(J.Value.id),
+                        Remarks: Text(J.Value.remarks)
+                    }
+                )
+            );
+            ClearCollect(
+                colAnswersRemarksRaw,
+                AddColumns(
+                    colAnswersRaw As Answer,
+                    Remarks,
+                    LookUp(colRemarksRaw, Id = Answer.ItemKey, Remarks)
+                )
+            );
+
             // パターン内の並び順を連番で付与
-            Set(varPatCount, CountRows(Filter(colAnswersRaw, !IsBlank(Kind))));
-            ClearCollect(colAnswersSeq, Filter(colAnswersRaw, !IsBlank(Kind)));
+            Set(varPatCount, CountRows(Filter(colAnswersRemarksRaw, !IsBlank(Kind))));
+            ClearCollect(colAnswersSeq, Filter(colAnswersRemarksRaw, !IsBlank(Kind)));
             Collect(
                 colAnswers,
                 ForAll(
@@ -12308,7 +12801,7 @@ Screens:
                         RadioSize: =16
                         Size: =12
                         Visible: =ThisItem.Kind = "radio"
-                        Width: =Parent.Width
+                        Width: =1058
                         Y: =32
                   - ddInput_2:
                       Control: Classic/DropDown@2.3.1
@@ -12363,6 +12856,7 @@ Screens:
                       Control: Gallery@2.15.0
                       Variant: Vertical
                       Properties:
+                        Height: =If(ThisItem.Kind = "checkbox", 40, 0)
                         Items: |-
                           =// 選択肢と「いま選ばれているか」を1つの表にまとめる。
                           // 入れ子のギャラリーの中からは外側の行（ThisItem）を参照できないため、
@@ -12379,39 +12873,33 @@ Screens:
                                   // 現在の値（カンマ区切り）
                                   Cur: ThisItem.Value,
                                   // 選択肢の定義（並び順を保って組み立て直すために使う）
-                                  ChoicesJson: Coalesce(ThisItem.Choices, "[]"),
-                                  // いま変更できるか（編集モードは「変更する」にチェックが要る）
-                                  CanEdit: varEntryMode <> "edit" || ThisItem.Edited
+                                  ChoicesJson: Coalesce(ThisItem.Choices, "[]")
                               }
                           )
-                        Height: =If(ThisItem.Kind = "checkbox", 40, 0)
                         OnSelect: |-
                           =// 押した選択肢だけ状態を反転させ、選択肢の定義順に並べ直してカンマで結合する
-                          If(
-                              ThisItem.CanEdit,
-                              Patch(
-                                  colAnswers,
-                                  LookUp(colAnswers, ItemKey = ThisItem.ItemKey),
-                                  {
-                                      Value: Concat(
-                                          Filter(
-                                              ForAll(
-                                                  Table(ParseJSON(ThisItem.ChoicesJson)) As C,
-                                                  {V: Text(C.Value)}
-                                              ),
-                                              If(
-                                                  V = ThisItem.Choice,
-                                                  // 押された選択肢は入／切を入れ替える
-                                                  Not(V in Split(ThisItem.Cur, ",").Value),
-                                                  // それ以外は今の状態のまま
-                                                  V in Split(ThisItem.Cur, ",").Value
-                                              )
+                          Patch(
+                              colAnswers,
+                              LookUp(colAnswers, ItemKey = ThisItem.ItemKey),
+                              {
+                                  Value: Concat(
+                                      Filter(
+                                          ForAll(
+                                              Table(ParseJSON(ThisItem.ChoicesJson)) As C,
+                                              {V: Text(C.Value)}
                                           ),
-                                          V,
-                                          ","
-                                      )
-                                  }
-                              )
+                                          If(
+                                              V = ThisItem.Choice,
+                                              // 押された選択肢は入／切を入れ替える
+                                              Not(V in Split(ThisItem.Cur, ",").Value),
+                                              // それ以外は今の状態のまま
+                                              V in Split(ThisItem.Cur, ",").Value
+                                          )
+                                      ),
+                                      V,
+                                      ","
+                                  )
+                              }
                           )
                         TemplatePadding: =0
                         TemplateSize: =30
@@ -12464,34 +12952,31 @@ Screens:
                         Visible: =(ThisItem.ItemKey = "fix_name_kanji" || ThisItem.ItemKey = "fix_division" || ThisItem.ItemKey = "fix_frame" || ThisItem.ItemKey = "fix_date" || ThisItem.ItemKey = "fix_time" || ThisItem.ItemKey = "fix_editlimit" || (ThisItem.ItemKey = "fix_duration" && varEntryMode = "edit") || (ThisItem.ItemKey = "fix_manager" && varEntryMode = "edit"))
                         Width: =440
                         Y: =32
-                  - lblRemarks_2:
-                      Control: Label@2.5.1
+                  - htmRemarks:
+                      Control: HtmlViewer@2.1.0
                       Properties:
                         AutoHeight: =true
-                        Color: =RGBA(130, 130, 130, 1)
-                        Height: |-
-                          =// 描画結果ではなく文字数から決めることで、
-                          // 再描画のたびに高さが揺れるのを防ぐ
-                          If(
-                              IsBlank(ThisItem.Remarks), 0,
-                              Len(ThisItem.Remarks) > 116, 80,
-                              Len(ThisItem.Remarks) > 58, 60,
-                              40
-                          )
-                        Size: =10
-                        Text: |-
+                        Font: =Font.'Open Sans'
+                        Height: =If(ThisItem.Kind = "remarks", 50, 0)
+                        HtmlText: |-
                           =If(
                               ThisItem.Kind = "section" || ThisItem.ItemKey = "fix_manager" || IsBlank(ThisItem.Remarks),
                               "",
-                              "※ " & ThisItem.Remarks
+                              ThisItem.Remarks
                           )
+                        PaddingTop: =0
                         Visible: =ThisItem.Kind <> "section" && ThisItem.ItemKey <> "fix_manager" && !IsBlank(ThisItem.Remarks)
-                        Width: =Parent.Width
+                        Width: =1058
                         Y: |-
-                          =If(
-                              ThisItem.Kind = "section" || IsBlank(ThisItem.Remarks),
-                              0,
-                              32 + If(ThisItem.Kind = "textarea", 56, ThisItem.Kind = "radio", 44, 40)
+                          =Switch(
+                              ThisItem.Kind,
+                              "text", txtInput_2.Y + txtInput_2.Height,
+                              "number", txtInput_2.Y + txtInput_2.Height,
+                              "textarea", txtArea_2.Y + txtArea_2.Height,
+                              "date", dpInput_2.Y + dpInput_2.Height,
+                              "select", ddInput_2.Y + ddInput_2.Height,
+                              "radio", rdoInput_2.Y + rdoInput_2.Height,
+                              "checkbox", galMultiCheck_2.Y + galMultiCheck_2.Height
                           )
             - lblReqWarn:
                 Control: Label@2.5.1
@@ -12684,7 +13169,7 @@ Screens:
                                         予約リスト,
                                         Defaults(予約リスト),
                                         {
-                                            Title: varPopupFrame & "_" & Text(varPopupDate, "yyyymmdd") & "_" &
+                                            予約名: varPopupFrame & "_" & Text(varPopupDate, "yyyymmdd") & "_" &
                                                 Text(varSelectedStart, "HHmm"),
                                             FrameName: varPopupFrame,
                                             パターン名: varPatternName,
